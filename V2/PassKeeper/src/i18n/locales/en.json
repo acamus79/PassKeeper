@@ -1,0 +1,48 @@
+{
+    "app": {
+        "loading": "Loading...",
+        "initError": "Failed to initialize the app. Please restart."
+    },
+    "login": {
+        "title": "Login",
+        "email": "Email",
+        "password": "Password",
+        "loginButton": "Login",
+        "registerPrompt": "Don't have an account? Register",
+        "biometricPrompt": "Use fingerprint",
+        "forgotPassword": "Forgot password?",
+        "username": "Username"
+    },
+    "register": {
+        "title": "Create Account",
+        "username": "Username",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "registerButton": "Register",
+        "termsAgreement": "I agree to the Terms and Conditions",
+        "useBiometrics": "Enable biometric authentication",
+        "passwordsDoNotMatch": "Passwords do not match",
+        "usernameRequired": "Username is required",
+        "passwordRequired": "Password is required",
+        "registrationSuccess": "Registration successful",
+        "registrationError": "Registration failed"
+    },
+    "terms": {
+        "title": "Terms and Conditions",
+        "showTerms": "View Terms and Conditions"
+    },
+    "common": {
+        "appName": "PassKeeper",
+        "home": "Home",
+        "passwords": "Passwords",
+        "categories": "Categories",
+        "settings": "Settings",
+        "profile": "Profile",
+        "search": "Search",
+        "accept": "Accept",
+        "cancel": "Cancel",
+        "ok": "OK",
+        "error": "Error",
+        "success": "Success"
+    }
+}

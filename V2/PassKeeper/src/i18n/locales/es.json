@@ -1,0 +1,48 @@
+{
+    "app": {
+        "loading": "Cargando...",
+        "initError": "Error al inicializar la aplicación. Por favor, reinicie."
+    },
+    "login": {
+        "title": "Iniciar Sesión",
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "loginButton": "Iniciar Sesión",
+        "registerPrompt": "¿No tienes cuenta? Regístrate",
+        "biometricPrompt": "Usar huella digital",
+        "forgotPassword": "¿Olvidaste tu contraseña?",
+        "username": "Nombre de usuario"
+    },
+    "register": {
+        "title": "Crear Cuenta",
+        "username": "Nombre de usuario",
+        "password": "Contraseña",
+        "confirmPassword": "Confirmar Contraseña",
+        "registerButton": "Registrarse",
+        "termsAgreement": "Acepto los Términos y Condiciones",
+        "useBiometrics": "Habilitar autenticación biométrica",
+        "passwordsDoNotMatch": "Las contraseñas no coinciden",
+        "usernameRequired": "El nombre de usuario es obligatorio",
+        "passwordRequired": "La contraseña es obligatoria",
+        "registrationSuccess": "Registro exitoso",
+        "registrationError": "Error en el registro"
+    },
+    "terms": {
+        "title": "Términos y Condiciones",
+        "showTerms": "Ver Términos y Condiciones"
+    },
+    "common": {
+        "appName": "PassKeeper",
+        "home": "Inicio",
+        "passwords": "Contraseñas",
+        "categories": "Categorías",
+        "settings": "Ajustes",
+        "profile": "Perfil",
+        "search": "Buscar",
+        "accept": "Aceptar",
+        "cancel": "Cancelar",
+        "ok": "OK",
+        "error": "Error",
+        "success": "Éxito"
+    }
+}

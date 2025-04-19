@@ -26,6 +26,7 @@ CREATE TABLE public."password" (
 	updated_at Timestamp null
 );
 
+
 ------------- FUNCIONES -------------
 
 -- Funcion para insertar un Usuario
@@ -51,7 +52,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Funcion para obtener todos los Password de un usuario
+-- Funcion para obhtener todos los Password de un usuario
 CREATE OR REPLACE FUNCTION get_passwords_by_user_id(in_user_id UUID)
 RETURNS TABLE (
     id UUID,
