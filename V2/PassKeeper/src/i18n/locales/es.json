@@ -3,6 +3,24 @@
         "loading": "Cargando...",
         "initError": "Error al inicializar la aplicación. Por favor, reinicie."
     },
+    "settings": {
+        "title": "Ajustes",
+        "language": "Idioma",
+        "security": "Seguridad",
+        "appearance": "Apariencia",
+        "about": "Acerca de",
+        "version": "Versión",
+        "darkMode": "Modo Oscuro",
+        "darkModeDisabled": "Desactivado",
+        "darkModeEnabled": "Activado",
+        "biometricAuth": "Autenticación Biométrica",
+        "biometricAuthDescription": "Utilizar huella digital para autenticación",
+        "account": "Cuenta",
+        "logout": "Cerrar Sesión",
+        "autoLock": "Bloquear automáticamente",
+        "autoLockDescription": "Bloquear la aplicación después de un período de inactividad",
+        "autoLockTimeout": "Tiempo de bloqueo automático"
+    },
     "login": {
         "title": "Iniciar Sesión",
         "email": "Correo electrónico",
@@ -12,6 +30,29 @@
         "biometricPrompt": "Usar huella digital",
         "forgotPassword": "¿Olvidaste tu contraseña?",
         "username": "Nombre de usuario"
+    },
+    "passwords": {
+        "title": "Contraseñas Protegidas",
+        "category": "Categoría",
+        "createNew": "Crear Nueva Contraseña",
+        "editPassword": "Editar Contraseña",
+        "website": "Sitio Web",
+        "username": "Nombre de usuario",
+        "password": "Contraseña",
+        "notes": "Anotaciones/Comentarios"
+    },
+    "categories": {
+        "title": "Categorías",
+        "addCategory": "Agregar Categoría",
+        "categoryName": "Nombre de la Categoría",
+        "email": "Correo Electrónico",
+        "website": "Sitio Web",
+        "banking": "Bancos",
+        "shopping": "Compras",
+        "general": "General",
+        "entertainment": "Entretenimiento",
+        "socialMedia": "Redes Sociales",
+        "work": "Trabajo"
     },
     "register": {
         "title": "Crear Cuenta",
@@ -42,7 +83,9 @@
         "accept": "Aceptar",
         "cancel": "Cancelar",
         "ok": "OK",
+        "save": "Guardar",
         "error": "Error",
-        "success": "Éxito"
+        "success": "Éxito",
+        "loading": "Cargando..."
     }
 }

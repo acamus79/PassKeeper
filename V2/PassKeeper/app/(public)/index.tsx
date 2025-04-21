@@ -3,13 +3,13 @@ import { StyleSheet, Image, TouchableOpacity, KeyboardAvoidingView, Platform, Al
 import { TextInput, Button, ActivityIndicator } from 'react-native-paper';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ThemedView } from '../../src/components/ui/ThemedView';
-import { ThemedText } from '../../src/components/ui/ThemedText';
-import useColorScheme from '../../src/hooks/useColorScheme';
-import useThemeColor from '../../src/hooks/useThemeColor';
-import useBiometrics from '../../src/hooks/useBiometrics';
-import useTranslation from '../../src/hooks/useTranslation';
-import { useAuth } from '../../src/contexts/AuthContext';
+import { ThemedView } from '@components/ui/ThemedView';
+import { ThemedText } from '@components/ui/ThemedText';
+import useColorScheme from '@hooks/useColorScheme';
+import useThemeColor from '@hooks/useThemeColor';
+import useBiometrics from '@hooks/useBiometrics';
+import useTranslation from '@hooks/useTranslation';
+import { useAuth } from '@contexts/AuthContext';
 
 export default function Index() {
   const { t } = useTranslation();
@@ -17,15 +17,11 @@ export default function Index() {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
-
-  // Usar el contexto de autenticación en lugar del servicio directamente
   const { isAuthenticated, loading: isAuthLoading, login } = useAuth();
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-
   const { isAvailable, isChecking, authenticate, checkBiometricAvailability } = useBiometrics();
 
   // Verificar si hay una sesión activa al cargar el componente

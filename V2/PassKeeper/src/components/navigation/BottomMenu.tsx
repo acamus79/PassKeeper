@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
 import { ThemedText } from '../ui/ThemedText';
 import { ThemedView } from '../ui/ThemedView';
-import useThemeColor from '../../hooks/useThemeColor';
-import useTranslation from '../../hooks/useTranslation';
+import useThemeColor from '@hooks/useThemeColor';
+import useTranslation from '@hooks/useTranslation';
 
 type MenuItem = {
     name: string;
@@ -21,9 +21,9 @@ export default function BottomMenu() {
     const tabIconDefault = useThemeColor({}, 'tabIconDefault');
 
     const menuItems: MenuItem[] = [
-        { name: 'home', icon: 'home', path: '/', label: t('common.home') },
-        { name: 'passwords', icon: 'key', path: 'passwords', label: t('common.passwords') },
+        //{ name: 'home', icon: 'home', path: '/', label: t('common.home') },
         { name: 'categories', icon: 'folder', path: 'categories', label: t('common.categories') },
+        { name: 'passwords', icon: 'key', path: 'passwords', label: t('common.passwords') },
         { name: 'settings', icon: 'cog', path: 'settings', label: t('common.settings') },
     ];
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Stack } from "expo-router";
-import useTranslation from '../../src/hooks/useTranslation';
-import useColorScheme from '../../src/hooks/useColorScheme';
-import Colors from '../../src/constants/Colors';
+import useTranslation from '@hooks/useTranslation';
+import useColorScheme from '@hooks/useColorScheme';
+import Colors from '@constants/Colors';
 
 export default function AuthLayout() {
   const { t } = useTranslation();

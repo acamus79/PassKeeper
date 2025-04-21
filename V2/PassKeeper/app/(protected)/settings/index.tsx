@@ -176,7 +176,6 @@ export default function SettingsScreen() {
                         }
                     />
 
-                    {/* Elemento para configurar el tiempo de auto-lock */}
                     {autoLockEnabled && (
                         <List.Item
                             title={t('settings.autoLockTimeout')}

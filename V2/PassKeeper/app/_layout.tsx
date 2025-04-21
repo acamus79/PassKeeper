@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import 'src/types/navigation';
-import { View, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { View, TouchableWithoutFeedback } from 'react-native';
 import { Slot, useRouter, useSegments } from "expo-router";
 import { Provider as PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import useColorScheme from '@hooks/useColorScheme';
@@ -30,14 +30,10 @@ function ProtectedLayout() {
       const inPublicGroup = segments[0] === '(public)';
       // Si no está autenticado y no está en el grupo público, redirigir al login
       if (!isAuthenticated && !inPublicGroup) {
-        console.log('Redirigiendo a login');
-        // Usar la ruta sin /index al final
         router.replace({
           pathname: '/(public)'
         });
       } else if (isAuthenticated && inPublicGroup) {
-        console.log('Redirigiendo a passwords');
-        // Si está autenticado y está en el grupo público, redirigir a la pantalla principal
         router.replace({
           pathname: '/(protected)/passwords'
         });
@@ -104,8 +100,3 @@ export default function RootLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

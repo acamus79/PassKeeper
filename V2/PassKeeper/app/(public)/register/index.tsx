@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, KeyboardAvoidingView, Platform, View, Alert } from 'react-native';
 import { TextInput, Button, Checkbox } from 'react-native-paper';
 import { router } from 'expo-router';
-import { ThemedView } from '../../../src/components/ui/ThemedView';
-import { ThemedText } from '../../../src/components/ui/ThemedText';
-import useThemeColor from '../../../src/hooks/useThemeColor';
-import useTranslation from '../../../src/hooks/useTranslation';
-import useBiometrics from '../../../src/hooks/useBiometrics';
-import { ScrollModal } from '../../../src/components/modals/ScrollModal';
-import { termsAndConditions } from '../../../src/constants/TermsAndConditions';
-import { UserService } from '../../../src/services/UserService';
-import { AuthService } from '../../../src/services/AuthService';
+import { ThemedView } from '@components/ui/ThemedView';
+import { ThemedText } from '@components/ui/ThemedText';
+import useThemeColor from '@hooks/useThemeColor';
+import useTranslation from '@hooks/useTranslation';
+import useBiometrics from '@hooks/useBiometrics';
+import { ScrollModal } from '@components/modals/ScrollModal';
+import { termsAndConditions } from '@constants/TermsAndConditions';
+import { UserService } from '@services/UserService';
+import { AuthService } from '@services/AuthService';
 
 export default function RegisterScreen() {
   const { t, currentLanguage } = useTranslation();
@@ -77,14 +77,14 @@ export default function RegisterScreen() {
           Alert.alert(
             t('common.success'),
             t('register.registrationSuccess'),
-            [{ text: t('common.ok'), onPress: () => router.replace('/(protected)/passwords/index') }]
+            [{ text: t('common.ok'), onPress: () => router.replace('../(protected)/passwords/index') }]
           );
         } else {
           // Si el inicio de sesión falla, redirigir al login
           Alert.alert(
             t('common.success'),
             t('register.registrationSuccessLoginManually'),
-            [{ text: t('common.ok'), onPress: () => router.replace('/(public)/index') }]
+            [{ text: t('common.ok'), onPress: () => router.replace('../(public)/index') }]
           );
         }
       }
