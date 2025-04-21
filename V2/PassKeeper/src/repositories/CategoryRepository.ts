@@ -25,7 +25,7 @@ export const CategoryRepository = {
         try {
             // Obtener tanto las categorías del sistema (user_id=0) como las del usuario específico
             return await db.getAllAsync<Category>(
-                'SELECT * FROM categories WHERE user_id = ? OR user_id = 0 ORDER BY name',
+                'SELECT * FROM categories WHERE user_id = ? OR user_id = 0 ORDER BY id',
                 userId
             );
         } catch (error) {

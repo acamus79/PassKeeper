@@ -15,7 +15,6 @@ export const CategoryService = {
                 console.log('No se proporcionó un ID de usuario válido');
                 return [];
             }
-            
             // Obtener categorías del usuario y las predefinidas (user_id=0)
             const categories = await CategoryRepository.findByUserId(userId);
             return categories || [];

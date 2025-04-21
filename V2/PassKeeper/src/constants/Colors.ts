@@ -13,6 +13,7 @@ export default {
         success: '#4CAF50',
         warning: '#FFC107',
         info: '#2196F3',
+        border: '#D1D1D1', // Color de borde para tema claro
     },
     dark: {
         text: '#FFFFFF',
@@ -25,5 +26,6 @@ export default {
         success: '#4CAF50',
         warning: '#FFC107',
         info: '#2196F3',
+        border: '#444444',
     },
 };

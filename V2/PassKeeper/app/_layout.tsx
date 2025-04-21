@@ -5,7 +5,7 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import { Provider as PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import useColorScheme from '@hooks/useColorScheme';
 import Colors from '@constants/Colors';
-import { initDatabase, resetDatabase } from '@database/database';
+import { initDatabase } from '@database/database';
 import { AuthProvider, useAuth } from '@contexts/AuthContext';
 import useActivityTracker from '@hooks/useActivityTracker';
 import * as SecureStore from 'expo-secure-store';
@@ -28,14 +28,6 @@ function ProtectedLayout() {
   useEffect(() => {
     if (!loading) {
       const inPublicGroup = segments[0] === '(public)';
-
-      console.log('Evaluando redirección:', {
-        isAuthenticated,
-        inPublicGroup,
-        shouldGoToLogin: !isAuthenticated && !inPublicGroup,
-        shouldGoToMain: isAuthenticated && inPublicGroup
-      });
-
       // Si no está autenticado y no está en el grupo público, redirigir al login
       if (!isAuthenticated && !inPublicGroup) {
         console.log('Redirigiendo a login');
@@ -70,10 +62,8 @@ export default function RootLayout() {
     const setupApp = async () => {
       try {
         console.log('Initializing database...');
-
         // Inicializar la base de datos normalmente
         await initDatabase();
-
         // Verificar datos de sesión en SecureStore
         const userId = await SecureStore.getItemAsync('session_user_id');
         const username = await SecureStore.getItemAsync('session_username');

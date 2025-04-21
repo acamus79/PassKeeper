@@ -113,7 +113,7 @@ export default function Index() {
             {t('common.appName')}
           </ThemedText>
           <Image
-            source={require('../../assets/images/react-logo.png')}
+            source={require('../../assets/images/passkeeper.png')}
             style={styles.logo}
             resizeMode="contain"
           />

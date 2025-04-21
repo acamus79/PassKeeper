@@ -14,7 +14,7 @@ export const PasswordService = {
         try {
             // Cifrar la contraseña
             const { encryptedData, iv } = await SecurityUtils.encrypt(plainPassword, salt);
-
+            console.log('Contraseña cifrada:', encryptedData);
             // Guardar en la base de datos
             return await PasswordRepository.create({
                 ...password,
@@ -63,30 +63,63 @@ export const PasswordService = {
 
     /**
      * Actualiza una contraseña existente
+     * @param id ID de la contraseña a actualizar
+     * @param data Objeto con los campos a actualizar (sin incluir password/iv)
+     * @param newPlainPassword La nueva contraseña en texto plano (o null si no cambió)
+     * @param salt Salt del usuario para cifrar la nueva contraseña si es necesario
      */
     updatePassword: async (
-        password: Password,
+        id: number,
+        // Input data from the screen/caller
+        data: Omit<Password, 'id' | 'password' | 'iv' | 'created_at' | 'updated_at' | 'category'> & { category_id: number },
         newPlainPassword: string | null,
         salt: string
     ): Promise<void> => {
         try {
-            // Solo cifrar si hay una nueva contraseña
+            // --- Start Logic Moved Here ---
+            // Object to hold the exact column:value pairs for the repository
+            const dbUpdateData: { [column: string]: string | number | null } = {};
+
+            // Map fields from input 'data' to database columns, applying logic
+            if (data.title !== undefined) dbUpdateData.title = data.title;
+            // Handle nullable fields explicitly
+            dbUpdateData.username = data.username || null;
+            dbUpdateData.website = data.website || null;
+            dbUpdateData.notes = data.notes || null;
+            // Handle boolean/number conversion
+            if (data.favorite !== undefined) dbUpdateData.favorite = data.favorite ? 1 : 0;
+            // Handle foreign key
+            if (data.category_id !== undefined) dbUpdateData.category_id = data.category_id;
+            // user_id should likely always be present in 'data' if required by logic
+            if (data.user_id !== undefined) dbUpdateData.user_id = data.user_id;
+            // Add other fields as needed...
+
+            // If a new password was provided, encrypt it and add columns
             if (newPlainPassword !== null) {
+                console.log("New password provided, encrypting...");
                 const { encryptedData, iv } = await SecurityUtils.encrypt(newPlainPassword, salt);
-                
-                // Actualizar la contraseña en la base de datos con los nuevos valores cifrados
-                await PasswordRepository.update({
-                    ...password,
-                    password: encryptedData,
-                    iv
-                });
+                dbUpdateData.password = encryptedData;
+                dbUpdateData.iv = iv;
             } else {
-                // Si no hay nueva contraseña, solo actualizar los otros campos
-                await PasswordRepository.update(password);
+                 console.log("Password not changed.");
             }
+            // --- End Logic Moved Here ---
+
+
+            // Check if there's anything to update before calling the repository
+            if (Object.keys(dbUpdateData).length === 0) {
+                 console.log("No changes detected to update in PasswordService.");
+                 return; // Nothing to update
+            }
+
+            // Call the simplified repository update function
+            await PasswordRepository.update(id, dbUpdateData);
+            console.log(`PasswordService successfully requested update for id ${id}`);
+
         } catch (error) {
-            console.error('Error updating encrypted password:', error);
-            throw new Error('Error al actualizar la contraseña cifrada');
+            console.error(`Error updating password with id ${id} in service:`, error);
+            // Throw a user-friendly or service-specific error
+            throw new Error('Error al actualizar la contraseña');
         }
     },
 
@@ -103,14 +136,10 @@ export const PasswordService = {
                 console.log('No se proporcionó un ID de usuario válido');
                 return [];
             }
-            
             const passwords = await PasswordRepository.findByUserId(userId);
             return passwords || [];
         } catch (error) {
             console.error('Error getting all passwords:', error);
-            // En lugar de lanzar un error, devolvemos un array vacío
-            // y registramos el error para depuración
-            console.warn('Devolviendo lista vacía debido al error');
             return [];
         }
     },
@@ -129,7 +158,7 @@ export const PasswordService = {
                 console.log('No se proporcionó un ID de usuario válido para la búsqueda');
                 return [];
             }
-            
+
             const passwords = await PasswordRepository.search(userId, query);
             return passwords || [];
         } catch (error) {

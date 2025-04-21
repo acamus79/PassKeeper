@@ -1,5 +1,5 @@
 import { db } from '../database/database';
-import { Password, Category } from '../types/entities';
+import { Password } from '../types/entities';
 
 export const PasswordRepository = {
     create: async (password: Omit<Password, 'id' | 'created_at' | 'updated_at'> & { category_id?: number }): Promise<number> => {
@@ -29,9 +29,10 @@ export const PasswordRepository = {
     findByUserId: async (userId: number): Promise<Password[]> => {
         try {
             const results = await db.getAllAsync<any>(
-                `SELECT 
+                `SELECT
                     p.*,
                     c.id as cat_id,
+                    c.key as cat_key,
                     c.name as cat_name,
                     c.icon as cat_icon,
                     c.color as cat_color,
@@ -63,6 +64,7 @@ export const PasswordRepository = {
                 if (row.cat_id) {
                     password.category = {
                         id: row.cat_id,
+                        key: row.cat_key,
                         name: row.cat_name,
                         icon: row.cat_icon,
                         color: row.cat_color,
@@ -239,38 +241,47 @@ export const PasswordRepository = {
         }
     },
 
-    update: async (password: Password): Promise<void> => {
+    // --- Start Refactor ---
+    /**
+     * Updates specific columns for a password entry identified by its ID.
+     * Assumes data contains column names and values ready for the DB.
+     * Always updates the updated_at timestamp.
+     * @param id The ID of the password to update.
+     * @param dataToUpdate An object where keys are column names and values are the new values.
+     */
+    update: async (id: number, dataToUpdate: { [column: string]: string | number | null }): Promise<void> => {
         try {
-            if (!password.id) {
-                throw new Error('Password ID is required for update');
+            const columns = Object.keys(dataToUpdate);
+
+            // If no specific columns are provided to update, do nothing.
+            if (columns.length === 0) {
+                console.warn(`PasswordRepository.update called for id ${id} with no data to update.`);
+                return;
             }
-            await db.runAsync(
-                `UPDATE passwords SET 
-                title = ?, 
-                username = ?, 
-                password = ?, 
-                website = ?, 
-                notes = ?, 
-                category_id = ?,
-                favorite = ?,
-                iv = ?,
-                updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')
-                WHERE id = ?`,
-                password.title,
-                password.username || null,
-                password.password,
-                password.website || null,
-                password.notes || null,
-                password.category?.id || null,
-                password.favorite || 0,
-                password.iv,
-                password.id
-            );
+
+            // Construct the SET clauses dynamically from the provided data
+            const setClauses = columns.map(col => `${col} = ?`);
+            const values = Object.values(dataToUpdate);
+
+            // Always add the updated_at timestamp
+            setClauses.push("updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')");
+
+            // Construct the final SQL query
+            const sql = `UPDATE passwords SET ${setClauses.join(', ')} WHERE id = ?`;
+            values.push(id); // Add the id for the WHERE clause
+
+            // Execute the query
+            console.log('Executing SQL:', sql);
+            console.log('With values:', values);
+            await db.runAsync(sql, ...values);
+
         } catch (error) {
-            console.error('Error updating password:', error);
-            throw error;
+            console.error(`Error updating password with id ${id}:`, error);
+            // Consider wrapping the error or re-throwing specific types
+            throw new Error(`Failed to update password with id ${id}`);
         }
     },
+    // --- End Refactor ---
 
     delete: async (id: number): Promise<void> => {
         try {

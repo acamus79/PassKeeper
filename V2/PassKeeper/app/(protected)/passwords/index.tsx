@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, FlatList, View } from 'react-native';
-import { FAB, Searchbar, Card, IconButton } from 'react-native-paper';
+import React, { useState, useCallback } from 'react';
+import { StyleSheet, FlatList, View, Alert } from 'react-native';
+import { FAB, Searchbar, Card, IconButton, Avatar } from 'react-native-paper';
 import { ThemedView } from '@components/ui/ThemedView';
 import { ThemedText } from '@components/ui/ThemedText';
 import useThemeColor from '@hooks/useThemeColor';
@@ -11,7 +11,8 @@ import { PasswordService } from '@services/PasswordService';
 import { Password } from '@app-types/entities';
 import { SecurityUtils } from '@utils/SecurityUtils';
 import { USER_SALT_KEY_PREFIX } from '@constants/secureStorage';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 
 export default function PasswordsScreen() {
   const { t } = useTranslation();
@@ -22,109 +23,223 @@ export default function PasswordsScreen() {
   const [passwords, setPasswords] = useState<Password[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [revealedState, setRevealedState] = useState<{ id: number | null; value: string; copied: boolean }>({
+    id: null,
+    value: '',
+    copied: false,
+  });
 
-  // Cargar contraseñas reales del usuario
-  useEffect(() => {
-    const loadPasswords = async () => {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
+  const defaultBorderColor = useThemeColor({}, 'border');
 
-      try {
-        setLoading(true);
-        // Obtener las contraseñas del usuario actual
-        const userPasswords = await PasswordService.getAllPasswords(userId);
-        setPasswords(userPasswords);
-        setError(null);
-      } catch (error) {
-        console.error('Error loading passwords:', error);
-        setError(t('passwords.loadError'));
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadPasswords = useCallback(async () => {
+    // Reset revealed state when loading/reloading passwords
+    setRevealedState({ id: null, value: '', copied: false });
 
-    loadPasswords();
-  }, [userId, t]);
+    if (!userId) {
+      setPasswords([]);
+      setLoading(false);
+      return;
+    }
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-
-    if (!userId) return;
+    if (searchQuery.trim() === '') {
+      setLoading(true);
+    }
+    setError(null);
 
     try {
-      setLoading(true);
-
-      if (query.trim() === '') {
-        // Cargar todas las contraseñas si la búsqueda está vacía
-        const allPasswords = await PasswordService.getAllPasswords(userId);
-        setPasswords(allPasswords);
+      let userPasswords;
+      if (searchQuery.trim() === '') {
+        userPasswords = await PasswordService.getAllPasswords(userId);
       } else {
-        // Implementar búsqueda en el repositorio
-        // Nota: Asumiendo que hay un método search en PasswordRepository
-        // Si no existe, deberías implementarlo o hacer la búsqueda localmente
-        const filteredPasswords = await PasswordService.searchPasswords(userId, query);
-        setPasswords(filteredPasswords);
+        userPasswords = await PasswordService.searchPasswords(userId, searchQuery);
       }
-    } catch (error) {
-      console.error('Error searching passwords:', error);
-      setError(t('passwords.searchError'));
+      setPasswords(userPasswords);
+    } catch (err) {
+      console.error('Error loading/searching passwords:', err);
+      setError(t('passwords.loadError'));
+      setPasswords([]);
     } finally {
       setLoading(false);
     }
+  }, [userId, t, searchQuery]); // Keep dependencies
+
+  useFocusEffect(
+    useCallback(() => {
+      loadPasswords(); // Call the memoized function
+    }, [loadPasswords]) // Depend on the memoized loadPasswords function
+  );
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    // loadPasswords is triggered by the change in searchQuery dependency in its useCallback
   };
 
-  // Función para ver la contraseña descifrada
-  const handleViewPassword = async (id: number) => {
+  // Function to toggle password visibility in the card
+  const handleTogglePasswordVisibility = async (id: number) => {
     if (!userId) return;
 
+    // If this password is the one currently revealed, hide it
+    if (revealedState.id === id) {
+      setRevealedState({ id: null, value: '', copied: false });
+      return;
+    }
+
+    // Otherwise, attempt to decrypt and reveal it
     try {
-      // Obtener el salt del usuario
+      // Get user salt
       const saltKey = `${USER_SALT_KEY_PREFIX}${userId}`;
       const salt = await SecurityUtils.secureRetrieve(saltKey);
 
       if (!salt) {
         console.error('User salt not found');
+        Alert.alert(t('common.error'), t('errors.saltRetrievalFailed'));
+        setRevealedState({ id: null, value: '', copied: false }); // Reset state on error
         return;
       }
 
-      // Obtener y descifrar la contraseña
-      const decryptedPassword = await PasswordService.getDecryptedPassword(id, salt);
+      // Get and decrypt the password
+      const decryptedPasswordData = await PasswordService.getDecryptedPassword(id, salt);
 
-      // Aquí puedes mostrar la contraseña en un modal o alert
-      // Por ahora solo la mostramos en consola
-      console.log('Contraseña descifrada:', decryptedPassword.decryptedPassword);
+      // Update state to show the revealed password
+      setRevealedState({
+        id: id,
+        value: decryptedPasswordData.decryptedPassword,
+        copied: false, // Reset copied status when revealing a new password
+      });
 
-      // TODO: Implementar un modal para mostrar la contraseña
     } catch (error) {
       console.error('Error viewing password:', error);
+      Alert.alert(t('common.error'), t('passwords.viewError'));
+      setRevealedState({ id: null, value: '', copied: false }); // Reset state on error
     }
   };
 
-  const renderPasswordItem = ({ item }: { item: Password }) => (
-    <Card style={styles.card} mode="outlined">
-      <Card.Title
-        title={item.title}
-        subtitle={item.category?.name || t('passwords.noCategory')}
-        right={(props) => (
-          <View style={styles.cardActions}>
-            <IconButton 
-              {...props} 
-              icon="eye" 
-              onPress={() => item.id !== undefined && handleViewPassword(item.id)} 
-            />
-            <IconButton {...props} icon="pencil" onPress={() => {/* TODO: Implementar edición */ }} />
-          </View>
-        )}
-      />
-      <Card.Content>
-        <ThemedText>Usuario: {item.username}</ThemedText>
-        <ThemedText>Contraseña: ********</ThemedText>
-        {item.notes && <ThemedText>Notas: {item.notes}</ThemedText>}
-      </Card.Content>
-    </Card>
-  );
+  // Function to copy the revealed password
+  const handleCopyRevealedPassword = async () => {
+    if (!revealedState.value) return; // Don't copy if no value is revealed
+
+    try {
+      await Clipboard.setStringAsync(revealedState.value);
+      setRevealedState(prev => ({ ...prev, copied: true })); // Update copied status
+
+      // Reset copied status after a delay
+      setTimeout(() => {
+        // Check if the same password is still revealed before resetting copied status
+        setRevealedState(prev => (prev.id === revealedState.id ? { ...prev, copied: false } : prev));
+      }, 1500);
+
+    } catch (error) {
+      console.error('Error copying password to clipboard:', error);
+      Alert.alert(t('common.error'), t('errors.copyFailed')); // Inform user about copy failure
+    }
+  };
+
+  const renderPasswordItem = ({ item }: { item: Password }) => {
+    // Determine the category display name
+    const categoryDisplayName = item.category
+      ? (item.category.key
+        ? t(`categories.${item.category.key}`)
+        : (item.category.name
+          ? item.category.name
+          : t('passwords.unknownCategory')))
+      : t('passwords.noCategory');
+
+    // Obtener el color de la categoría directamente. Será undefined si no existe.
+    const categoryColor = item.category?.color;
+    const categoryIcon = item.category?.icon;
+    // Determinar si hay un estilo de categoría basado en si categoryColor tiene un valor.
+    const hasCategoryStyle = !!categoryColor;
+    const isRevealed = revealedState.id === item.id;
+
+    return (
+      <Card
+        style={[
+          styles.card,
+          // Aplicar estilos específicos del borde izquierdo SOLO si hay color de categoría
+          hasCategoryStyle && {
+            borderLeftColor: categoryColor, // Usar el color de la categoría
+            borderLeftWidth: 8,
+          },
+          // Si NO hay estilo de categoría, asegurar que el borde izquierdo sea delgado
+          !hasCategoryStyle && {
+            borderLeftWidth: 1,
+
+            borderRightColor: defaultBorderColor,
+          }
+        ]}
+        elevation={2}
+      >
+        <Card.Title
+          title={item.title}
+          subtitle={categoryDisplayName}
+          left={(props) =>
+            categoryIcon ? (
+              <Avatar.Icon
+                {...props}
+                icon={categoryIcon}
+                size={40}
+                // Asegurar que el fondo del Avatar use el color correcto o un fallback
+                style={{ backgroundColor: categoryColor || defaultBorderColor }}
+                color="#fff"
+              />
+            ) : (
+              <Avatar.Icon
+                {...props}
+                icon="folder-outline"
+                size={40}
+                style={{ backgroundColor: defaultBorderColor }}
+                color={textColor}
+              />
+            )
+          }
+          right={(props) => (
+            <View style={styles.cardActions}>
+              <IconButton
+                {...props}
+                icon={isRevealed ? "eye-off" : "eye"}
+                onPress={() => item.id !== undefined && handleTogglePasswordVisibility(item.id)}
+              />
+              <IconButton
+                {...props}
+                icon="pencil"
+                onPress={() => {
+                  // Navegar a la pantalla de creación/edición pasando el ID
+                  if (item.id !== undefined) {
+                    router.push({
+                      pathname: '/passwords/create', // Ruta a la pantalla de creación/edición
+                      params: { passwordId: item.id }, // Pasar el ID como parámetro
+                    });
+                  }
+                }}
+              />
+            </View>
+          )}
+        />
+        <Card.Content>
+          <ThemedText>Usuario: {item.username}</ThemedText>
+          {isRevealed ? (
+            <>
+              <View style={styles.passwordRow}>
+                <ThemedText style={styles.passwordText}>Contraseña: {revealedState.value}</ThemedText>
+                <IconButton
+                  icon={revealedState.copied ? "check" : "content-copy"}
+                  size={20}
+                  onPress={handleCopyRevealedPassword}
+                  disabled={revealedState.copied}
+                  style={styles.copyButton}
+                />
+              </View>
+              {item.created_at && <ThemedText>Creado: {item.created_at}</ThemedText>}
+              {item.website && <ThemedText>Sitio web: {item.website}</ThemedText>}
+              {item.notes && <ThemedText>Notas: {item.notes}</ThemedText>}
+            </>
+          ) : (
+            <ThemedText>Contraseña: ********</ThemedText>
+          )}
+        </Card.Content>
+      </Card>
+    );
+  };
 
   // Componente para mostrar cuando no hay contraseñas
   const EmptyState = () => (
@@ -190,14 +305,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   listContent: {
-    paddingBottom: 80,
+    paddingBottom: 80, // Ensure space for FAB
   },
   emptyListContent: {
-    flex: 1,
+    flex: 1, // Ensure empty state takes full height
     justifyContent: 'center',
   },
   card: {
     marginBottom: 16,
+    marginHorizontal: 5,
+    //backgroundColor: '#cccccc',
   },
   cardActions: {
     flexDirection: 'row',
@@ -227,5 +344,17 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     opacity: 0.7,
+  },
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  passwordText: {
+    flex: 1, // Allow text to take available space
+    marginRight: 8, // Add some space before the button
+  },
+  copyButton: {
+    margin: 0, // Reduce default IconButton margins
   },
 });

@@ -12,6 +12,7 @@ export interface User {
 
 export interface Category {
     id?: number;
+    key?: string;
     name: string;
     icon?: string;
     color?: string;

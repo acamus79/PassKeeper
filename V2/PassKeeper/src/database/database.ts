@@ -1,10 +1,20 @@
 import { openDatabaseSync } from 'expo-sqlite';
 
+const DEFAULT_USER_ID = 0; // ID para categorías del sistema
+const DEFAULT_CATEGORIES = [
+    { key: 'general', icon: 'shield-account', color: '#888888', user_id: DEFAULT_USER_ID },
+    { key: 'socialMedia', icon: 'tooltip-account', color: '#3b5998', user_id: DEFAULT_USER_ID },
+    { key: 'email', icon: 'email', color: '#d44638', user_id: DEFAULT_USER_ID },
+    { key: 'banking', icon: 'bank', color: '#006400', user_id: DEFAULT_USER_ID },
+    { key: 'shopping', icon: 'shopping', color: '#ff9900', user_id: DEFAULT_USER_ID },
+    { key: 'entertainment', icon: 'movie-open-play', color: '#e50914', user_id: DEFAULT_USER_ID },
+    { key: 'work', icon: 'tools', color: '#0077b5', user_id: DEFAULT_USER_ID },
+];
+
 // Create the database connection
 export const db = openDatabaseSync('passkeeper.db');
 
 // Initialize database tables
-// Actualizar la creación de la tabla users
 export const initDatabase = async () => {
     try {
         // Create users table if it doesn't exist
@@ -23,7 +33,8 @@ export const initDatabase = async () => {
         await db.execAsync(`
             CREATE TABLE IF NOT EXISTS categories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
+                key TEXT,
+                name TEXT,
                 icon TEXT,
                 color TEXT,
                 user_id INTEGER NOT NULL,
@@ -53,7 +64,24 @@ export const initDatabase = async () => {
             )
         `);
 
-        console.log('Database tables initialized successfully');
+        // Insertar categorías por defecto si no existen
+        for (const cat of DEFAULT_CATEGORIES) {
+            const existing = await db.getFirstAsync(
+                'SELECT id FROM categories WHERE key = ? AND user_id = ?',
+                cat.key,
+                cat.user_id
+            );
+            if (!existing) {
+                await db.runAsync(
+                    'INSERT INTO categories (key, icon, color, user_id) VALUES (?, ?, ?, ?)',
+                    cat.key,
+                    cat.icon,
+                    cat.color,
+                    cat.user_id
+                );
+                console.log('Categoría insertada:', cat.key);
+            }
+        }
         return true;
     } catch (error) {
         console.error('Error initializing database tables:', error);
