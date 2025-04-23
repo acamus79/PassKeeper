@@ -1,19 +1,23 @@
 import { db } from '../database/database';
 import { User } from '../types/entities';
+import { executeInTransaction, executeWithRetry } from '../utils/DatabaseUtils';
 
 // Añadir métodos para gestionar la configuración de auto-lock
 export const UserRepository = {
     create: async (user: Omit<User, 'id'>): Promise<number> => {
         try {
-            const result = await db.runAsync(
-                `INSERT INTO users (username, password, biometric) 
-                VALUES (?, ?, ?)`,
-                user.username,
-                user.password,
-                user.biometric || 0
-            );
-            console.log('User created with ID:', result.lastInsertRowId);
-            return result.lastInsertRowId;
+            // Usar transacción para garantizar la integridad de la operación
+            return await executeInTransaction(async () => {
+                const result = await db.runAsync(
+                    `INSERT INTO users (username, password, biometric) 
+                    VALUES (?, ?, ?)`,
+                    user.username,
+                    user.password,
+                    user.biometric || 0
+                );
+                console.log('User created with ID:', result.lastInsertRowId);
+                return result.lastInsertRowId;
+            });
         } catch (error) {
             console.error('Error creating user:', error);
             throw error;
@@ -22,10 +26,13 @@ export const UserRepository = {
 
     findByEmail: async (email: string): Promise<User | null> => {
         try {
-            return await db.getFirstAsync<User>(
-                'SELECT * FROM users WHERE email = ?',
-                email
-            );
+            // Usar executeWithRetry para manejar posibles bloqueos de base de datos
+            return await executeWithRetry(async () => {
+                return await db.getFirstAsync<User>(
+                    'SELECT * FROM users WHERE email = ?',
+                    email
+                );
+            });
         } catch (error) {
             console.error('Error finding user by email:', error);
             throw error;
@@ -34,10 +41,13 @@ export const UserRepository = {
 
     findByUsername: async (username: string): Promise<User | null> => {
         try {
-            return await db.getFirstAsync<User>(
-                'SELECT * FROM users WHERE username = ?',
-                username
-            );
+            // Usar executeWithRetry para manejar posibles bloqueos de base de datos
+            return await executeWithRetry(async () => {
+                return await db.getFirstAsync<User>(
+                    'SELECT * FROM users WHERE username = ?',
+                    username
+                );
+            });
         } catch (error) {
             console.error('Error finding user by username:', error);
             throw error;
@@ -46,10 +56,13 @@ export const UserRepository = {
 
     findById: async (id: number): Promise<User | null> => {
         try {
-            return await db.getFirstAsync<User>(
-                'SELECT * FROM users WHERE id = ?',
-                id
-            );
+            // Usar executeWithRetry para manejar posibles bloqueos de base de datos
+            return await executeWithRetry(async () => {
+                return await db.getFirstAsync<User>(
+                    'SELECT * FROM users WHERE id = ?',
+                    id
+                );
+            });
         } catch (error) {
             console.error('Error finding user by id:', error);
             throw error;
@@ -62,18 +75,24 @@ export const UserRepository = {
                 throw new Error('User ID is required for update');
             }
 
-            await db.runAsync(
-                `UPDATE users SET 
-                username = ?, 
-                password = ?, 
-                biometric = ?,
-                updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime') 
-                WHERE id = ?`,
-                user.username,
-                user.password,
-                user.biometric || 0,
-                user.id
-            );
+            // Después de la verificación, sabemos que user.id es un número
+            const userId: number = user.id;
+
+            // Usar transacción para garantizar la integridad de la operación
+            await executeInTransaction(async () => {
+                await db.runAsync(
+                    `UPDATE users SET 
+                    username = ?, 
+                    password = ?, 
+                    biometric = ?,
+                    updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime') 
+                    WHERE id = ?`,
+                    user.username,
+                    user.password,
+                    user.biometric || 0,
+                    userId
+                );
+            });
         } catch (error) {
             console.error('Error updating user:', error);
             throw error;
@@ -83,14 +102,17 @@ export const UserRepository = {
     // Add a method to update just the biometric setting
     updateBiometric: async (userId: number, biometric: number): Promise<void> => {
         try {
-            await db.runAsync(
-                `UPDATE users SET 
-                biometric = ?,
-                updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime') 
-                WHERE id = ?`,
-                biometric,
-                userId
-            );
+            // Usar transacción para garantizar la integridad de la operación
+            await executeInTransaction(async () => {
+                await db.runAsync(
+                    `UPDATE users SET 
+                    biometric = ?,
+                    updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime') 
+                    WHERE id = ?`,
+                    biometric,
+                    userId
+                );
+            });
         } catch (error) {
             console.error('Error updating biometric setting:', error);
             throw error;
@@ -99,7 +121,10 @@ export const UserRepository = {
 
     delete: async (id: number): Promise<void> => {
         try {
-            await db.runAsync('DELETE FROM users WHERE id =?', id);
+            // Usar transacción para garantizar la integridad de la operación
+            await executeInTransaction(async () => {
+                await db.runAsync('DELETE FROM users WHERE id = ?', id);
+            });
         } catch (error) {
             console.error('Error deleting user:', error);
             throw error;

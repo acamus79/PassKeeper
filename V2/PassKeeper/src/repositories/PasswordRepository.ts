@@ -1,48 +1,55 @@
 import { db } from '../database/database';
 import { Password } from '../types/entities';
+import { executeWithRetry, executeInTransaction } from '../utils/DatabaseUtils';
 
 export const PasswordRepository = {
     create: async (password: Omit<Password, 'id' | 'created_at' | 'updated_at'> & { category_id?: number }): Promise<number> => {
         try {
-            const result = await db.runAsync(
-                `INSERT INTO passwords (
-                title, username, password, website, notes, 
-                category_id, favorite, iv, user_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                password.title,
-                password.username || null,
-                password.password,
-                password.website || null,
-                password.notes || null,
-                password.category_id || null,
-                password.favorite || 0,
-                password.iv,
-                password.user_id
-            );
-            return result.lastInsertRowId;
+            // Usar transacción para garantizar que la operación se complete o se revierta completamente
+            return await executeInTransaction(async () => {
+                const result = await db.runAsync(
+                    `INSERT INTO passwords (
+                    title, username, password, website, notes, 
+                    category_id, favorite, iv, user_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    password.title,
+                    password.username || null,
+                    password.password,
+                    password.website || null,
+                    password.notes || null,
+                    password.category_id || null,
+                    password.favorite || 0,
+                    password.iv,
+                    password.user_id
+                );
+                return result.lastInsertRowId;
+            });
         } catch (error) {
             console.error('Error creating password:', error);
-            throw error;
+            throw new Error('Failed to create password');
         }
     },
 
     findByUserId: async (userId: number): Promise<Password[]> => {
         try {
-            const results = await db.getAllAsync<any>(
-                `SELECT
-                    p.*,
-                    c.id as cat_id,
-                    c.key as cat_key,
-                    c.name as cat_name,
-                    c.icon as cat_icon,
-                    c.color as cat_color,
-                    c.user_id as cat_user_id
-                FROM passwords p
-                LEFT JOIN categories c ON p.category_id = c.id
-                WHERE p.user_id = ?
-                ORDER BY p.title`,
-                userId
-            );
+            // Usar executeWithRetry para manejar posibles bloqueos de base de datos
+            const results = await executeWithRetry(async () => {
+                return await db.getAllAsync<any>(
+                    `SELECT
+                        p.*,
+                        c.id as cat_id,
+                        c.key as cat_key,
+                        c.name as cat_name,
+                        c.icon as cat_icon,
+                        c.color as cat_color,
+                        c.user_id as cat_user_id
+                    FROM passwords p
+                    LEFT JOIN categories c ON p.category_id = c.id
+                    WHERE p.user_id = ?
+                    ORDER BY p.title`,
+                    userId
+                );
+            });
 
             // Transform results to include category object
             return results.map(row => {
@@ -82,19 +89,22 @@ export const PasswordRepository = {
 
     findById: async (id: number): Promise<Password | null> => {
         try {
-            const result = await db.getFirstAsync<any>(
-                `SELECT 
-                    p.*,
-                    c.id as cat_id,
-                    c.name as cat_name,
-                    c.icon as cat_icon,
-                    c.color as cat_color,
-                    c.user_id as cat_user_id
-                FROM passwords p
-                LEFT JOIN categories c ON p.category_id = c.id
-                WHERE p.id = ?`,
-                id
-            );
+            // Usar executeWithRetry para manejar posibles bloqueos de base de datos
+            const result = await executeWithRetry(async () => {
+                return await db.getFirstAsync<any>(
+                    `SELECT 
+                        p.*,
+                        c.id as cat_id,
+                        c.name as cat_name,
+                        c.icon as cat_icon,
+                        c.color as cat_color,
+                        c.user_id as cat_user_id
+                    FROM passwords p
+                    LEFT JOIN categories c ON p.category_id = c.id
+                    WHERE p.id = ?`,
+                    id
+                );
+            });
 
             if (!result) return null;
 
@@ -132,20 +142,23 @@ export const PasswordRepository = {
 
     findByCategoryId: async (categoryId: number): Promise<Password[]> => {
         try {
-            const results = await db.getAllAsync<any>(
-                `SELECT 
-                    p.*,
-                    c.id as cat_id,
-                    c.name as cat_name,
-                    c.icon as cat_icon,
-                    c.color as cat_color,
-                    c.user_id as cat_user_id
-                FROM passwords p
-                LEFT JOIN categories c ON p.category_id = c.id
-                WHERE p.category_id = ?
-                ORDER BY p.title`,
-                categoryId
-            );
+            // Usar executeWithRetry para manejar posibles bloqueos de base de datos
+            const results = await executeWithRetry(async () => {
+                return await db.getAllAsync<any>(
+                    `SELECT 
+                        p.*,
+                        c.id as cat_id,
+                        c.name as cat_name,
+                        c.icon as cat_icon,
+                        c.color as cat_color,
+                        c.user_id as cat_user_id
+                    FROM passwords p
+                    LEFT JOIN categories c ON p.category_id = c.id
+                    WHERE p.category_id = ?
+                    ORDER BY p.title`,
+                    categoryId
+                );
+            });
 
             // Transform results to include category object
             return results.map(row => {
@@ -185,26 +198,29 @@ export const PasswordRepository = {
     search: async (userId: number, query: string): Promise<Password[]> => {
         try {
             const searchQuery = `%${query}%`;
-            const results = await db.getAllAsync<any>(
-                `SELECT 
-                    p.*,
-                    c.id as cat_id,
-                    c.name as cat_name,
-                    c.icon as cat_icon,
-                    c.color as cat_color,
-                    c.user_id as cat_user_id
-                FROM passwords p
-                LEFT JOIN categories c ON p.category_id = c.id
-                WHERE p.user_id = ? AND (
-                    p.title LIKE ? OR 
-                    p.username LIKE ? OR 
-                    p.website LIKE ? OR 
-                    p.notes LIKE ? OR
-                    c.name LIKE ?
-                )
-                ORDER BY p.title`,
-                userId, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery
-            );
+            // Usar executeWithRetry para manejar posibles bloqueos de base de datos
+            const results = await executeWithRetry(async () => {
+                return await db.getAllAsync<any>(
+                    `SELECT 
+                        p.*,
+                        c.id as cat_id,
+                        c.name as cat_name,
+                        c.icon as cat_icon,
+                        c.color as cat_color,
+                        c.user_id as cat_user_id
+                    FROM passwords p
+                    LEFT JOIN categories c ON p.category_id = c.id
+                    WHERE p.user_id = ? AND (
+                        p.title LIKE ? OR 
+                        p.username LIKE ? OR 
+                        p.website LIKE ? OR 
+                        p.notes LIKE ? OR
+                        c.name LIKE ?
+                    )
+                    ORDER BY p.title`,
+                    userId, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery
+                );
+            });
 
             // Transform results to include category object
             return results.map(row => {
@@ -241,7 +257,6 @@ export const PasswordRepository = {
         }
     },
 
-    // --- Start Refactor ---
     /**
      * Updates specific columns for a password entry identified by its ID.
      * Assumes data contains column names and values ready for the DB.
@@ -251,47 +266,50 @@ export const PasswordRepository = {
      */
     update: async (id: number, dataToUpdate: { [column: string]: string | number | null }): Promise<void> => {
         try {
-            const columns = Object.keys(dataToUpdate);
+            // Usar transacción para garantizar que la operación se complete o se revierta completamente
+            await executeInTransaction(async () => {
+                const columns = Object.keys(dataToUpdate);
 
-            // If no specific columns are provided to update, do nothing.
-            if (columns.length === 0) {
-                console.warn(`PasswordRepository.update called for id ${id} with no data to update.`);
-                return;
-            }
+                // If no specific columns are provided to update, do nothing.
+                if (columns.length === 0) {
+                    console.warn(`PasswordRepository.update called for id ${id} with no data to update.`);
+                    return;
+                }
 
-            // Construct the SET clauses dynamically from the provided data
-            const setClauses = columns.map(col => `${col} = ?`);
-            const values = Object.values(dataToUpdate);
+                // Construct the SET clauses dynamically from the provided data
+                const setClauses = columns.map(col => `${col} = ?`);
+                const values = Object.values(dataToUpdate);
 
-            // Always add the updated_at timestamp
-            setClauses.push("updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')");
+                // Always add the updated_at timestamp
+                setClauses.push("updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')");
 
-            // Construct the final SQL query
-            const sql = `UPDATE passwords SET ${setClauses.join(', ')} WHERE id = ?`;
-            values.push(id); // Add the id for the WHERE clause
+                // Construct the final SQL query
+                const sql = `UPDATE passwords SET ${setClauses.join(', ')} WHERE id = ?`;
+                values.push(id); // Add the id for the WHERE clause
 
-            // Execute the query
-            console.log('Executing SQL:', sql);
-            console.log('With values:', values);
-            await db.runAsync(sql, ...values);
-
+                // Execute the query
+                console.log('Executing SQL:', sql);
+                console.log('With values:', values);
+                await db.runAsync(sql, ...values);
+            });
         } catch (error) {
             console.error(`Error updating password with id ${id}:`, error);
-            // Consider wrapping the error or re-throwing specific types
             throw new Error(`Failed to update password with id ${id}`);
         }
     },
-    // --- End Refactor ---
 
     delete: async (id: number): Promise<void> => {
         try {
-            await db.runAsync(
-                'DELETE FROM passwords WHERE id = ?',
-                id
-            );
+            // Usar transacción para garantizar que la operación se complete o se revierta completamente
+            await executeInTransaction(async () => {
+                await db.runAsync(
+                    'DELETE FROM passwords WHERE id = ?',
+                    id
+                );
+            });
         } catch (error) {
             console.error('Error deleting password:', error);
-            throw error;
+            throw new Error(`Failed to delete password with id ${id}`);
         }
     }
 };

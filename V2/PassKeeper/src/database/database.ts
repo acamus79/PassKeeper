@@ -1,14 +1,16 @@
 import { openDatabaseSync } from 'expo-sqlite';
+import { categoryColors } from '@constants/Colors'; // Importar los colores de categoría
+
 
 const DEFAULT_USER_ID = 0; // ID para categorías del sistema
 const DEFAULT_CATEGORIES = [
-    { key: 'general', icon: 'shield-account', color: '#888888', user_id: DEFAULT_USER_ID },
-    { key: 'socialMedia', icon: 'tooltip-account', color: '#3b5998', user_id: DEFAULT_USER_ID },
-    { key: 'email', icon: 'email', color: '#d44638', user_id: DEFAULT_USER_ID },
-    { key: 'banking', icon: 'bank', color: '#006400', user_id: DEFAULT_USER_ID },
-    { key: 'shopping', icon: 'shopping', color: '#ff9900', user_id: DEFAULT_USER_ID },
-    { key: 'entertainment', icon: 'movie-open-play', color: '#e50914', user_id: DEFAULT_USER_ID },
-    { key: 'work', icon: 'tools', color: '#0077b5', user_id: DEFAULT_USER_ID },
+    { key: 'general', icon: 'shield-account', color: categoryColors.general, user_id: DEFAULT_USER_ID },
+    { key: 'email', icon: 'email-lock', color: categoryColors.email, user_id: DEFAULT_USER_ID },
+    { key: 'banking', icon: 'cash-lock', color: categoryColors.banking, user_id: DEFAULT_USER_ID },
+    { key: 'entertainment', icon: 'youtube-subscription', color: categoryColors.entertainment, user_id: DEFAULT_USER_ID },
+    { key: 'shopping', icon: 'shopping', color: categoryColors.shopping, user_id: DEFAULT_USER_ID },
+    { key: 'work', icon: 'tools', color: categoryColors.work, user_id: DEFAULT_USER_ID },
+    { key: 'socialMedia', icon: 'tooltip-account', color: categoryColors.socialMedia, user_id: DEFAULT_USER_ID },
 ];
 
 // Create the database connection
@@ -72,13 +74,16 @@ export const initDatabase = async () => {
                 cat.user_id
             );
             if (!existing) {
+                // --- Start Edit 3: Ensure INSERT uses the correct properties ---
+                // No change needed here structurally, but confirms it uses cat.color which now comes from categoryColors
                 await db.runAsync(
                     'INSERT INTO categories (key, icon, color, user_id) VALUES (?, ?, ?, ?)',
                     cat.key,
                     cat.icon,
-                    cat.color,
+                    cat.color, // This 'color' now holds the value from categoryColors
                     cat.user_id
                 );
+                // --- End Edit 3 ---
                 console.log('Categoría insertada:', cat.key);
             }
         }
