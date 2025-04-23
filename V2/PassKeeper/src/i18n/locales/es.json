@@ -19,7 +19,13 @@
         "logout": "Cerrar Sesión",
         "autoLock": "Bloquear automáticamente",
         "autoLockDescription": "Bloquear la aplicación después de un período de inactividad",
-        "autoLockTimeout": "Tiempo de bloqueo automático"
+        "autoLockTimeout": "Tiempo de bloqueo automático",
+        "termsAndConditions": "Términos y Condiciones",
+        "termsAndConditionsDescription": "Lea nuestros Términos y Condiciones de uso",
+        "privacyPolicy": "Política de Privacidad",
+        "privacyPolicyDescription": "Lea nuestra Política de Privacidad",
+        "FAQ": "Preguntas Frecuentes",
+        "FAQDescription": "Respuestas a las preguntas más comunes"
     },
     "login": {
         "title": "Iniciar Sesión",
@@ -29,17 +35,31 @@
         "registerPrompt": "¿No tienes cuenta? Regístrate",
         "biometricPrompt": "Usar huella digital",
         "forgotPassword": "¿Olvidaste tu contraseña?",
-        "username": "Nombre de usuario"
+        "username": "Nombre de usuario",
+        "authError": "Error de autenticación",
+        "invalidCredentials": "Credenciales inválidas",
+        "biometricAuthNotSupported": "Autenticación biométrica no soportada",
+        "biometricAuthFailed": "Autenticación biométrica fallida"
     },
     "passwords": {
-        "title": "Contraseñas Protegidas",
+        "title": "Contraseñas seguras",
+        "name": "Título",
         "category": "Categoría",
         "createNew": "Crear Nueva Contraseña",
         "editPassword": "Editar Contraseña",
         "website": "Sitio Web",
         "username": "Nombre de usuario",
+        "createdAt": "Creado: ",
         "password": "Contraseña",
-        "notes": "Anotaciones/Comentarios"
+        "notes": "Anotaciones/Comentarios",
+        "noPasswordsTitle": "No hay contraseñas",
+        "noPasswordsDescription": "No hay contraseñas guardadas. Crea una nueva contraseña.",
+        "invalidCategorySelected": "Categoría inválida seleccionada",
+        "passwordSaved": "Contraseña guardada",
+        "passwordUpdated": "Contraseña actualizada",
+        "passwordDeleted": "Contraseña eliminada",
+        "passwordCopied": "Contraseña copiada al portapapeles",
+        "updatingError": "Error al actualizar la contraseña"
     },
     "categories": {
         "title": "Categorías",
@@ -82,10 +102,13 @@
         "search": "Buscar",
         "accept": "Aceptar",
         "cancel": "Cancelar",
+        "close": "Cerrar",
+        "understood": "Entendido",
         "ok": "OK",
         "save": "Guardar",
         "error": "Error",
         "success": "Éxito",
-        "loading": "Cargando..."
+        "loading": "Cargando...",
+        "update": "Actualizar"
     }
 }
