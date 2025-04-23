@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, KeyboardAvoidingView, Platform, View, Alert } from 'react-native';
 import { TextInput, Button, Checkbox } from 'react-native-paper';
 import { router } from 'expo-router';
@@ -15,8 +15,9 @@ import { AuthService } from '@services/AuthService';
 export default function RegisterScreen() {
   const { t, currentLanguage } = useTranslation();
   const tintColor = useThemeColor({}, 'tint');
+  const surfaceVariant = useThemeColor({}, 'surfaceVariant');
+  const onSurfaceVariant = useThemeColor({}, 'onSurfaceVariant'); // You need this for the icon
   const { isAvailable, isChecking, checkBiometricAvailability } = useBiometrics();
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -106,6 +107,47 @@ export default function RegisterScreen() {
     // Si el usuario cancela los términos, no se establece termsAccepted a true
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 16,
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 24,
+      textAlign: 'center',
+    },
+    input: {
+      marginBottom: 16,
+      backgroundColor: surfaceVariant,
+    },
+    checkboxContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+      flexWrap: 'wrap',
+    },
+    checkboxTextContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+    },
+    termsButton: {
+      marginLeft: 4,
+      padding: 0,
+    },
+    button: {
+      marginTop: 16,
+      paddingVertical: 4,
+    },
+  }), [surfaceVariant]);
+
   return (
     <ThemedView style={styles.container}>
       <KeyboardAvoidingView
@@ -120,10 +162,15 @@ export default function RegisterScreen() {
           label={t('register.username')}
           value={username}
           onChangeText={setUsername}
-          style={styles.input}
+          style={styles.input} // Uses the memoized styles.input
           mode="outlined"
           autoCapitalize="none"
-          theme={{ colors: { primary: tintColor } }}
+          theme={{
+            colors: {
+              primary: tintColor,
+              onSurface: onSurfaceVariant,
+            }
+          }}
         />
 
         <TextInput
@@ -132,12 +179,18 @@ export default function RegisterScreen() {
           onChangeText={setPassword}
           secureTextEntry={secureTextEntry}
           style={styles.input}
-          mode="outlined"
-          theme={{ colors: { primary: tintColor } }}
+          mode='outlined'
+          theme={{
+            colors: {
+              primary: tintColor,
+              onSurface: onSurfaceVariant,
+            }
+          }}
           right={
             <TextInput.Icon
               icon={secureTextEntry ? "eye" : "eye-off"}
               onPress={() => setSecureTextEntry(!secureTextEntry)}
+              color={onSurfaceVariant}
             />
           }
         />
@@ -148,8 +201,13 @@ export default function RegisterScreen() {
           onChangeText={setConfirmPassword}
           secureTextEntry={secureTextEntry}
           style={styles.input}
-          mode="outlined"
-          theme={{ colors: { primary: tintColor } }}
+          mode='outlined'
+          theme={{
+            colors: {
+              primary: tintColor,
+              onSurface: onSurfaceVariant,
+            }
+          }}
         />
 
         <View style={styles.checkboxContainer}>
@@ -204,42 +262,3 @@ export default function RegisterScreen() {
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  input: {
-    marginBottom: 16,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  checkboxTextContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-  },
-  termsButton: {
-    marginLeft: 4,
-    padding: 0,
-  },
-  button: {
-    marginTop: 16,
-    paddingVertical: 4,
-  },
-});

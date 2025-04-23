@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import 'src/types/navigation';
-import { View, TouchableWithoutFeedback } from 'react-native';
+import { View, TouchableWithoutFeedback, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { Slot, useRouter, useSegments } from "expo-router";
 import { Provider as PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import useColorScheme from '@hooks/useColorScheme';
-import Colors from '@constants/Colors';
+import Colors from '@constants/Colors'; // Asegúrate que la importación sea del default export
 import { initDatabase } from '@database/database';
 import { AuthProvider, useAuth } from '@contexts/AuthContext';
 import useActivityTracker from '@hooks/useActivityTracker';
@@ -12,7 +12,7 @@ import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider } from '../src/contexts/ThemeContext';
 
 // Componente para manejar la protección de rutas a nivel global
-function ProtectedLayout() {
+function ProtectedLayout({ colorScheme }: { colorScheme: 'light' | 'dark' }) {
   const segments = useSegments();
   const router = useRouter();
   const { isAuthenticated, loading } = useAuth();
@@ -44,9 +44,19 @@ function ProtectedLayout() {
   // Envolver el contenido en un TouchableWithoutFeedback para detectar interacciones
   return (
     <TouchableWithoutFeedback onPress={updateActivity}>
-      <View style={{ flex: 1 }}>
-        <Slot />
-      </View>
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Configurar StatusBar para que sea translúcida y respete el área segura */}
+        <StatusBar
+          translucent={true}
+          backgroundColor="transparent"
+          barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+        />
+        {/* Agregar un espacio superior para dispositivos Android que no respetan SafeAreaView */}
+        {Platform.OS === 'android' && <View style={{ height: StatusBar.currentHeight || 0 }} />}
+        <View style={{ flex: 1 }}>
+          <Slot />
+        </View>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 }
@@ -63,7 +73,6 @@ export default function RootLayout() {
         // Verificar datos de sesión en SecureStore
         const userId = await SecureStore.getItemAsync('session_user_id');
         const username = await SecureStore.getItemAsync('session_username');
-        console.log('Datos de sesión encontrados:', { userId, username });
 
       } catch (error) {
         console.error('Error during app initialization:', error);
@@ -78,14 +87,14 @@ export default function RootLayout() {
       ...MD3DarkTheme,
       colors: {
         ...MD3DarkTheme.colors,
-        primary: Colors.dark.tint
+        ...Colors.dark,
       }
     }
     : {
       ...MD3LightTheme,
       colors: {
         ...MD3LightTheme.colors,
-        primary: Colors.light.tint
+        ...Colors.light,
       }
     };
 
@@ -93,7 +102,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <PaperProvider theme={theme}>
-          <ProtectedLayout />
+          <ProtectedLayout colorScheme={colorScheme} />
         </PaperProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -76,7 +76,6 @@ export const PasswordService = {
         salt: string
     ): Promise<void> => {
         try {
-            // --- Start Logic Moved Here ---
             // Object to hold the exact column:value pairs for the repository
             const dbUpdateData: { [column: string]: string | number | null } = {};
 
@@ -101,15 +100,13 @@ export const PasswordService = {
                 dbUpdateData.password = encryptedData;
                 dbUpdateData.iv = iv;
             } else {
-                 console.log("Password not changed.");
+                console.log("Password not changed.");
             }
-            // --- End Logic Moved Here ---
-
 
             // Check if there's anything to update before calling the repository
             if (Object.keys(dbUpdateData).length === 0) {
-                 console.log("No changes detected to update in PasswordService.");
-                 return; // Nothing to update
+                console.log("No changes detected to update in PasswordService.");
+                return; // Nothing to update
             }
 
             // Call the simplified repository update function

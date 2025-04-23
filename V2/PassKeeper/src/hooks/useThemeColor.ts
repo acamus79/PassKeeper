@@ -1,5 +1,5 @@
-import Colors from '../constants/Colors';
-import useColorScheme from './useColorScheme';
+import Colors from '@constants/Colors';
+import useColorScheme from '@hooks/useColorScheme';
 
 type ColorName = keyof typeof Colors.light;
 
