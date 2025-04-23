@@ -1,24 +1,23 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, FlatList, View, Alert } from 'react-native';
 import { FAB, Searchbar, Card, IconButton, Avatar } from 'react-native-paper';
+import { router, useFocusEffect } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 import { ThemedView } from '@components/ui/ThemedView';
 import { ThemedText } from '@components/ui/ThemedText';
-import useThemeColor from '@hooks/useThemeColor';
-import useTranslation from '@hooks/useTranslation';
+import useTranslation from "@hooks/useTranslation";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@contexts/AuthContext';
 import { PasswordService } from '@services/PasswordService';
 import { Password } from '@app-types/entities';
 import { SecurityUtils } from '@utils/SecurityUtils';
 import { USER_SALT_KEY_PREFIX } from '@constants/secureStorage';
-import { router, useFocusEffect } from 'expo-router';
-import * as Clipboard from 'expo-clipboard';
+import useThemeColor from '@hooks/useThemeColor';
+
 
 export default function PasswordsScreen() {
   const { t } = useTranslation();
   const { userId } = useAuth();
-  const tintColor = useThemeColor({}, 'tint');
-  const textColor = useThemeColor({}, 'text');
   const [searchQuery, setSearchQuery] = useState('');
   const [passwords, setPasswords] = useState<Password[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,8 +28,14 @@ export default function PasswordsScreen() {
     copied: false,
   });
 
-  const defaultBorderColor = useThemeColor({}, 'border');
+  // Fetch the specific colors needed
+  const surfaceColor = useThemeColor({}, 'surface');
+  const onSurfaceColor = useThemeColor({}, 'onSurface'); // Color for text/icons on surface
+  const defaultBorderColor = useThemeColor({}, 'border'); // Keep this declaration
+  const avatarTextColor = useThemeColor({}, 'onPrimary'); // Usually white or black for text on colored avatar
+  const tintColor = useThemeColor({}, 'tint');
 
+  // Memoize the loadPasswords function to avoid unnecessary re-renders
   const loadPasswords = useCallback(async () => {
     // Reset revealed state when loading/reloading passwords
     setRevealedState({ id: null, value: '', copied: false });
@@ -155,6 +160,7 @@ export default function PasswordsScreen() {
       <Card
         style={[
           styles.card,
+          { backgroundColor: surfaceColor }, // Uses destructured surfaceColor
           // Aplicar estilos específicos del borde izquierdo SOLO si hay color de categoría
           hasCategoryStyle && {
             borderLeftColor: categoryColor, // Usar el color de la categoría
@@ -163,8 +169,7 @@ export default function PasswordsScreen() {
           // Si NO hay estilo de categoría, asegurar que el borde izquierdo sea delgado
           !hasCategoryStyle && {
             borderLeftWidth: 1,
-
-            borderRightColor: defaultBorderColor,
+            borderLeftColor: defaultBorderColor,
           }
         ]}
         elevation={2}
@@ -172,23 +177,24 @@ export default function PasswordsScreen() {
         <Card.Title
           title={item.title}
           subtitle={categoryDisplayName}
+          titleStyle={{ color: onSurfaceColor }} // Uses destructured onSurfaceColor
+          subtitleStyle={{ color: onSurfaceColor }} // Uses destructured onSurfaceColor
           left={(props) =>
             categoryIcon ? (
               <Avatar.Icon
                 {...props}
                 icon={categoryIcon}
                 size={40}
-                // Asegurar que el fondo del Avatar use el color correcto o un fallback
-                style={{ backgroundColor: categoryColor || defaultBorderColor }}
-                color="#fff"
+                style={{ backgroundColor: categoryColor || defaultBorderColor }} // Uses destructured defaultBorderColor
+                color={avatarTextColor} // Uses destructured avatarTextColor
               />
             ) : (
               <Avatar.Icon
                 {...props}
                 icon="folder-outline"
                 size={40}
-                style={{ backgroundColor: defaultBorderColor }}
-                color={textColor}
+                style={{ backgroundColor: defaultBorderColor }} // Uses destructured defaultBorderColor
+                color={onSurfaceColor} // Uses destructured onSurfaceColor
               />
             )
           }
@@ -197,11 +203,13 @@ export default function PasswordsScreen() {
               <IconButton
                 {...props}
                 icon={isRevealed ? "eye-off" : "eye"}
+                iconColor={onSurfaceColor} // Uses destructured onSurfaceColor
                 onPress={() => item.id !== undefined && handleTogglePasswordVisibility(item.id)}
               />
               <IconButton
                 {...props}
                 icon="pencil"
+                iconColor={onSurfaceColor} // Uses destructured onSurfaceColor
                 onPress={() => {
                   // Navegar a la pantalla de creación/edición pasando el ID
                   if (item.id !== undefined) {
@@ -216,25 +224,28 @@ export default function PasswordsScreen() {
           )}
         />
         <Card.Content>
-          <ThemedText>Usuario: {item.username}</ThemedText>
+          <ThemedText>{t("passwords.username")}: {item.username}</ThemedText>
           {isRevealed ? (
             <>
               <View style={styles.passwordRow}>
-                <ThemedText style={styles.passwordText}>Contraseña: {revealedState.value}</ThemedText>
+                <ThemedText style={styles.passwordText}>{t("passwords.password")}: {revealedState.value}</ThemedText>
                 <IconButton
                   icon={revealedState.copied ? "check" : "content-copy"}
                   size={20}
+                  iconColor={onSurfaceColor} // Uses destructured onSurfaceColor
                   onPress={handleCopyRevealedPassword}
                   disabled={revealedState.copied}
                   style={styles.copyButton}
                 />
               </View>
-              {item.created_at && <ThemedText>Creado: {item.created_at}</ThemedText>}
-              {item.website && <ThemedText>Sitio web: {item.website}</ThemedText>}
-              {item.notes && <ThemedText>Notas: {item.notes}</ThemedText>}
+
+              {item.website && <ThemedText>{t('passwords.website')}: {item.website}</ThemedText>}
+              {item.created_at && <ThemedText>{t('passwords.createdAt')} {item.created_at}</ThemedText>}
+              {item.notes && <ThemedText>{t('passwords.notes')}: {item.notes}</ThemedText>}
+
             </>
           ) : (
-            <ThemedText>Contraseña: ********</ThemedText>
+            <ThemedText>{t("passwords.password")}: ********** </ThemedText>
           )}
         </Card.Content>
       </Card>
@@ -244,7 +255,7 @@ export default function PasswordsScreen() {
   // Componente para mostrar cuando no hay contraseñas
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
-      <MaterialCommunityIcons name="lock-outline" size={80} color={textColor} style={styles.emptyIcon} />
+      <MaterialCommunityIcons name="lock-outline" size={80} color={avatarTextColor} style={styles.emptyIcon} />
       <ThemedText style={styles.emptyTitle}>{t('passwords.noPasswordsTitle')}</ThemedText>
       <ThemedText style={styles.emptyText}>{t('passwords.noPasswordsDescription')}</ThemedText>
     </View>
@@ -253,7 +264,7 @@ export default function PasswordsScreen() {
   // Componente para mostrar cuando hay un error
   const ErrorState = () => (
     <View style={styles.emptyContainer}>
-      <MaterialCommunityIcons name="alert-circle-outline" size={80} color={textColor} style={styles.emptyIcon} />
+      <MaterialCommunityIcons name="alert-circle-outline" size={80} color={avatarTextColor} style={styles.emptyIcon} />
       <ThemedText style={styles.emptyTitle}>{t('common.error')}</ThemedText>
       <ThemedText style={styles.emptyText}>{error}</ThemedText>
     </View>
@@ -289,8 +300,9 @@ export default function PasswordsScreen() {
 
       <FAB
         icon="plus"
-        style={[styles.fab, { backgroundColor: tintColor }]}
+        style={[styles.fab, { backgroundColor: tintColor }]} // Uses destructured tintColor
         onPress={() => router.push('/passwords/create')}
+        color={onSurfaceColor}
       />
     </ThemedView>
   );
@@ -314,7 +326,6 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
     marginHorizontal: 5,
-    //backgroundColor: '#cccccc',
   },
   cardActions: {
     flexDirection: 'row',
@@ -333,7 +344,8 @@ const styles = StyleSheet.create({
   },
   emptyIcon: {
     marginBottom: 20,
-    opacity: 0.7,
+    opacity: 0.5,
+    color: '#CD4C2C',
   },
   emptyTitle: {
     fontSize: 20,

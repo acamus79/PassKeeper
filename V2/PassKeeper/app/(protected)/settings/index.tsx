@@ -10,17 +10,55 @@ import { UserService } from '@services/UserService';
 import { AuthService } from '@services/AuthService';
 import { resetDatabase } from '@database/database';
 import * as SecureStore from 'expo-secure-store';
+import useThemeColor from '@hooks/useThemeColor';
+import { version } from '../../../package.json';
+import { ScrollModal } from '@components/modals/ScrollModal';
+import { termsAndConditions } from '@constants/TermsAndConditions';
+import { faqs } from '@constants/FAQs';
+import { privacyPolicy } from '@constants/PrivacyPolicy';
+
+// Definición de estilos estáticos
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    divider: {
+        marginVertical: 8,
+    },
+});
 
 export default function SettingsScreen() {
-    const { t } = useTranslation();
+    const { t, currentLanguage, changeLanguage } = useTranslation();
     const { logout, userId } = useAuth();
-    const { theme, themePreference, setThemePreference } = useTheme();
+    const { theme, setThemePreference } = useTheme();
     const { isAvailable, authenticate } = useBiometrics();
+
+    // Obtener colores del tema
+    const primaryColor = useThemeColor({}, 'primary');
+    const errorColor = useThemeColor({}, 'error');
+    const warningColor = useThemeColor({}, 'warning');
+    const infoColor = useThemeColor({}, 'info');
+    const successColor = useThemeColor({}, 'success');
 
     const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
     const [autoLockEnabled, setAutoLockEnabled] = useState(true);
     const [autoLockTimeout, setAutoLockTimeout] = useState(5);
     const isDarkMode = theme === 'dark';
+
+    // Estados para los modales
+    const [termsModalVisible, setTermsModalVisible] = useState(false);
+    const [faqModalVisible, setFaqModalVisible] = useState(false);
+    const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+
+    // Estilos que dependen del tema
+    const themedStyles = StyleSheet.create({
+        logoutText: {
+            color: errorColor,
+        },
+        dangerText: {
+            color: errorColor,
+        },
+    });
 
     // Cargar el estado actual de la autenticación biométrica
     useEffect(() => {
@@ -89,11 +127,7 @@ export default function SettingsScreen() {
                 enabled: value,
                 timeout: autoLockTimeout
             });
-
             setAutoLockEnabled(value);
-
-            // No need to update AuthService separately since UserService handles it
-            console.log(`Auto-lock ${value ? 'activado' : 'desactivado'}`);
         } catch (error) {
             console.error('Error al cambiar configuración de auto-lock:', error);
         }
@@ -108,9 +142,6 @@ export default function SettingsScreen() {
             });
 
             setAutoLockTimeout(timeout);
-
-            // No need to update AuthService separately since UserService handles it
-            console.log(`Tiempo de auto-lock cambiado a ${timeout} minutos`);
         } catch (error) {
             console.error('Error al cambiar tiempo de auto-lock:', error);
         }
@@ -118,6 +149,12 @@ export default function SettingsScreen() {
 
     const handleToggleDarkMode = async (value: boolean) => {
         await setThemePreference(value ? 'dark' : 'light');
+    };
+
+    const handleToggleLanguage = () => {
+        // Alternar entre español e inglés
+        const newLanguage = currentLanguage === 'es' ? 'en' : 'es';
+        changeLanguage(newLanguage);
     };
 
     const handleLogout = async () => {
@@ -203,15 +240,44 @@ export default function SettingsScreen() {
                         left={props => <List.Icon {...props} icon="theme-light-dark" />}
                         right={props => <Switch value={isDarkMode} onValueChange={handleToggleDarkMode} />}
                     />
+                    <List.Item
+                        title={t('settings.language')}
+                        description={currentLanguage === 'es' ? 'Español' : 'English'}
+                        left={props => <List.Icon {...props} icon="translate" />}
+                        onPress={handleToggleLanguage}
+                        right={props => <List.Icon {...props} icon="chevron-right" />}
+                    />
                 </List.Section>
 
                 <List.Section>
                     <List.Subheader>{t('settings.about')}</List.Subheader>
                     <List.Item
                         title={t('settings.version')}
-                        description="1.0.0"
-                        left={props => <List.Icon {...props} icon="information" />}
+                        description={version}
+                        left={props => <List.Icon {...props} icon="information" color={infoColor} />}
                     />
+                    <List.Item
+                        title={t('settings.FAQ')}
+                        description={t('settings.FAQDescription')}
+                        left={props => <List.Icon {...props} icon="help-circle-outline" color={infoColor} />}
+                        onPress={() => setFaqModalVisible(true)}
+                        right={props => <List.Icon {...props} icon="chevron-right" />}
+                    />
+                    <List.Item
+                        title={t('settings.termsAndConditions')}
+                        description={t('settings.termsAndConditionsDescription')}
+                        left={props => <List.Icon {...props} icon="file-document-outline" color={infoColor} />}
+                        onPress={() => setTermsModalVisible(true)}
+                        right={props => <List.Icon {...props} icon="chevron-right" />}
+                    />
+                    <List.Item
+                        title={t('settings.privacyPolicy')}
+                        description={t('settings.privacyPolicyDescription')}
+                        left={props => <List.Icon {...props} icon="shield-lock-outline" color={infoColor} />}
+                        onPress={() => setPrivacyModalVisible(true)}
+                        right={props => <List.Icon {...props} icon="chevron-right" />}
+                    />
+
                 </List.Section>
 
                 <Divider style={styles.divider} />
@@ -220,9 +286,9 @@ export default function SettingsScreen() {
                     <List.Subheader>{t('settings.account')}</List.Subheader>
                     <List.Item
                         title={t('settings.logout')}
-                        left={props => <List.Icon {...props} icon="logout" color="#FF5252" />}
+                        left={props => <List.Icon {...props} icon="logout" color={errorColor} />}
                         onPress={handleLogout}
-                        titleStyle={styles.logoutText}
+                        titleStyle={themedStyles.logoutText}
                     />
                 </List.Section>
 
@@ -233,14 +299,14 @@ export default function SettingsScreen() {
                     <List.Item
                         title="Resetear Base de Datos"
                         description="Borra todos los datos y cierra la sesión"
-                        left={props => <List.Icon {...props} icon="database-refresh" color="#FF5252" />}
+                        left={props => <List.Icon {...props} icon="database-refresh" color={errorColor} />}
                         onPress={handleResetDatabase}
-                        titleStyle={styles.dangerText}
+                        titleStyle={themedStyles.dangerText}
                     />
                     <List.Item
                         title="Probar Auto-Lock"
                         description="Simula que ha pasado el tiempo de inactividad"
-                        left={props => <List.Icon {...props} icon="timer-sand" color="#FF9800" />}
+                        left={props => <List.Icon {...props} icon="timer-sand" color={warningColor} />}
                         onPress={async () => {
                             try {
                                 // Obtener el tiempo actual
@@ -276,7 +342,7 @@ export default function SettingsScreen() {
                     <List.Item
                         title="Ver Estado de Sesión"
                         description="Muestra información sobre el estado actual de la sesión"
-                        left={props => <List.Icon {...props} icon="information" color="#2196F3" />}
+                        left={props => <List.Icon {...props} icon="information" color={infoColor} />}
                         onPress={async () => {
                             try {
                                 const lastActivityStr = await SecureStore.getItemAsync('session_last_activity');
@@ -306,21 +372,39 @@ export default function SettingsScreen() {
                     />
                 </List.Section>
             </ScrollView>
+
+            {/* Modal de Términos y Condiciones */}
+            <ScrollModal
+                visible={termsModalVisible}
+                onAccept={() => setTermsModalVisible(false)}
+                onCancel={() => setTermsModalVisible(false)}
+                title={t('settings.termsAndConditions')}
+                content={currentLanguage === 'es' ? termsAndConditions.es : termsAndConditions.en}
+                acceptText={t('common.understood')}
+                cancelText={t('common.close')}
+                requireFullScroll={false}
+            />
+
+            <ScrollModal
+                visible={faqModalVisible}
+                onAccept={() => setFaqModalVisible(false)}
+                onCancel={() => setFaqModalVisible(false)}
+                title={t('settings.FAQ')}
+                content={currentLanguage === 'es' ? faqs.es : faqs.en}
+                acceptText={t('common.understood')}
+                cancelText={t('common.close')}
+                requireFullScroll={false}
+            />
+            <ScrollModal
+                visible={privacyModalVisible}
+                onAccept={() => setPrivacyModalVisible(false)}
+                onCancel={() => setPrivacyModalVisible(false)}
+                title={t('settings.privacyPolicy')}
+                content={currentLanguage === 'es' ? privacyPolicy.es : privacyPolicy.en}
+                acceptText={t('common.understood')}
+                cancelText={t('common.close')}
+                requireFullScroll={false}
+            />
         </ThemedView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    divider: {
-        marginVertical: 8,
-    },
-    logoutText: {
-        color: '#FF5252',
-    },
-    dangerText: {
-        color: '#FF5252',
-    },
-});

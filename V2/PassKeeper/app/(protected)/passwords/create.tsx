@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, ScrollView, Alert, ActivityIndicator } from 'react-native'; // Added ActivityIndicator
 import { TextInput, Button, IconButton, Menu } from 'react-native-paper';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { ThemedView } from '@components/ui/ThemedView';
 import { ThemedText } from '@components/ui/ThemedText';
 import useThemeColor from '@hooks/useThemeColor';
@@ -13,13 +14,21 @@ import { useAuth } from '@contexts/AuthContext';
 import { Category } from '@app-types/entities';
 import { USER_SALT_KEY_PREFIX } from '@constants/secureStorage';
 
-export default function CreateEditPasswordScreen() {
+export default function CreatePasswordScreen() {
+    const navigation = useNavigation();
     const { t } = useTranslation();
     const { userId } = useAuth();
     const tintColor = useThemeColor({}, 'tint');
     const params = useLocalSearchParams<{ passwordId?: string }>();
     const passwordId = params.passwordId ? parseInt(params.passwordId, 10) : null;
     const isEditMode = passwordId !== null;
+
+    // Establecer el título dinámicamente basado en el modo
+    useEffect(() => {
+        navigation.setOptions({
+            title: isEditMode ? t('passwords.editPassword') : t('passwords.createNew')
+        });
+    }, [navigation, isEditMode, t]);
 
     // Estados para los campos del formulario
     const [title, setTitle] = useState('');
@@ -70,7 +79,7 @@ export default function CreateEditPasswordScreen() {
     // Cargar datos de la contraseña si estamos en modo edición
     useEffect(() => {
         const loadPasswordData = async () => {
-            // Wait until we are in edit mode, have userId, passwordId, AND categories have loaded
+            // Espera hasta que estemos en modo edición, tengamos userId, passwordId, Y las categorías se hayan cargado
             if (!isEditMode || !userId || !passwordId || categories.length === 0) {
                 if (isEditMode && categories.length === 0) {
                     setIsLoadingData(true);
@@ -102,20 +111,20 @@ export default function CreateEditPasswordScreen() {
                 if (passwordData.category) { // Check if category object exists
                     console.log('(Edit Mode) Attempting to find category for ID:', passwordData.category.id); // Use passwordData.category.id
                     console.log('(Edit Mode) Available categories:', categories.map(c => ({ id: c.id, name: c.name, key: c.key })));
-                    // Find the category in the loaded list using the ID from the nested object
+                    // Encuentra la categoría en la lista cargada usando el ID del objeto anidado
                     const category = categories.find(cat => cat.id === passwordData.category?.id); // Use optional chaining for safe access
                     if (category) {
                         console.log('(Edit Mode) Category found and set:', category);
-                        setSelectedCategory(category); // Set the specific category for the password
+                        setSelectedCategory(category); // Establecer la categoría específica para la contraseña
                     } else {
-                        // This case might happen if categories haven't loaded yet, or if the category was deleted.
+                        // Este caso puede ocurrir si las categorías no se han cargado todavía, o si la categoría ha sido eliminada.
                         console.warn('(Edit Mode) Category object existed in password data, but not found in loaded categories list for ID:', passwordData.category.id);
                         setSelectedCategory(null);
                     }
                 } else {
-                    // Handle case where the password in the DB might not have a category assigned
+                    // Manejar el caso en que la contraseña en la DB podría no tener una categoría asignada
                     console.warn('(Edit Mode) Password data does not have a category object associated.');
-                    setSelectedCategory(null); // No category to select
+                    setSelectedCategory(null);
                 }
 
             } catch (error) {
@@ -127,9 +136,8 @@ export default function CreateEditPasswordScreen() {
             }
         };
 
-        // Dependencies remain the same
         loadPasswordData();
-    }, [isEditMode, passwordId, userId, t, categories]); // Keep dependencies
+    }, [isEditMode, passwordId, userId, t, categories]);
 
     // Generar contraseña aleatoria
     const generateRandomPassword = async () => {
@@ -143,22 +151,20 @@ export default function CreateEditPasswordScreen() {
     };
 
     const handleSave = async () => {
-        // Validar campos (catches null selectedCategory)
+
+        // Validar campos
         if (!title.trim() || !password.trim() || !selectedCategory || !userId) {
             Alert.alert(t('common.error'), t('passwords.titleRequired'));
             return;
         }
 
-        // Explicitly check if the selected category has a valid numeric ID
-        // This addresses the case where Category.id might be optional or undefined
+        // Comprobar explícitamente si la categoría seleccionada tiene un ID numérico válido
+        // Esto es necesario porque el Category.id puede ser opcional o indefinido
         if (typeof selectedCategory.id !== 'number') {
             console.error("Selected category is missing a valid numeric ID:", selectedCategory);
-            // Provide a user-friendly error message - consider adding a specific translation key
             Alert.alert(t('common.error'), t('passwords.invalidCategorySelected', 'Invalid category selected. Cannot save.'));
-            return; // Stop the save process
+            return;
         }
-        // Now TypeScript knows selectedCategory is not null AND selectedCategory.id is a number.
-        // This assignment should now be safe and type-correct.
         const categoryId: number = selectedCategory.id;
 
         try {
@@ -240,52 +246,14 @@ export default function CreateEditPasswordScreen() {
     return (
         <ThemedView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <ThemedText style={styles.title}>
-                    {isEditMode ? t('passwords.editPassword') : t('passwords.createNew')}
-                </ThemedText>
                 <TextInput
-                    label={t('passwords.title')}
+                    label={t('passwords.name')}
                     value={title}
                     onChangeText={setTitle}
                     style={styles.input}
                     mode="outlined"
                     theme={{ colors: { primary: tintColor } }}
                 />
-
-                <TextInput
-                    label={t('passwords.username')}
-                    value={username}
-                    onChangeText={setUsername}
-                    style={styles.input}
-                    mode="outlined"
-                    autoCapitalize="none"
-                    theme={{ colors: { primary: tintColor } }}
-                />
-
-                <View style={styles.passwordContainer}>
-                    <TextInput
-                        label={t('passwords.password')}
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry={secureTextEntry}
-                        style={styles.passwordInput}
-                        mode="outlined"
-                        theme={{ colors: { primary: tintColor } }}
-                        right={
-                            <TextInput.Icon
-                                icon={secureTextEntry ? "eye" : "eye-off"}
-                                onPress={() => setSecureTextEntry(!secureTextEntry)}
-                            />
-                        }
-                    />
-                    <IconButton
-                        icon="dice-multiple"
-                        size={24}
-                        onPress={generateRandomPassword}
-                        style={styles.generateButton}
-                        iconColor={tintColor}
-                    />
-                </View>
 
                 <View style={styles.categoryContainer}>
                     <Menu
@@ -343,6 +311,41 @@ export default function CreateEditPasswordScreen() {
                         )}
                     </Menu>
                 </View>
+
+                <View style={styles.passwordContainer}>
+                    <TextInput
+                        label={t('passwords.password')}
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={secureTextEntry}
+                        style={styles.passwordInput}
+                        mode="outlined"
+                        theme={{ colors: { primary: tintColor } }}
+                        right={
+                            <TextInput.Icon
+                                icon={secureTextEntry ? "eye" : "eye-off"}
+                                onPress={() => setSecureTextEntry(!secureTextEntry)}
+                            />
+                        }
+                    />
+                    <IconButton
+                        icon="dice-multiple"
+                        size={24}
+                        onPress={generateRandomPassword}
+                        style={styles.generateButton}
+                        iconColor={tintColor}
+                    />
+                </View>
+
+                <TextInput
+                    label={t('passwords.username')}
+                    value={username}
+                    onChangeText={setUsername}
+                    style={styles.input}
+                    mode="outlined"
+                    autoCapitalize="none"
+                    theme={{ colors: { primary: tintColor } }}
+                />
 
                 <TextInput
                     label={t('passwords.website')}

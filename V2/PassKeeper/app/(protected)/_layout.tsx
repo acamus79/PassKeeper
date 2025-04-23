@@ -1,11 +1,11 @@
 import React from 'react';
 import { Stack } from "expo-router";
 import { View, StyleSheet } from 'react-native';
-import useTranslation from '../../src/hooks/useTranslation';
-import useColorScheme from '../../src/hooks/useColorScheme';
-import Colors from '../../src/constants/Colors';
-import BottomMenu from '../../src/components/navigation/BottomMenu';
-import useBiometrics from '../../src/hooks/useBiometrics';
+import useTranslation from '@/hooks/useTranslation';
+import useColorScheme from '@/hooks/useColorScheme';
+import useBiometrics from '@hooks/useBiometrics';
+import Colors from '@constants/Colors';
+import BottomMenu from '@components/navigation/BottomMenu';
 
 export default function AppLayout() {
   const { t } = useTranslation();

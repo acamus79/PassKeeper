@@ -14,8 +14,8 @@ import { useAuth } from '@contexts/AuthContext';
 export default function Index() {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
+  const onSurfaceVariant = useThemeColor({}, 'onSurfaceVariant');
+  const surfaceVariant = useThemeColor({}, 'surfaceVariant');
   const tintColor = useThemeColor({}, 'tint');
   const { isAuthenticated, loading: isAuthLoading, login } = useAuth();
   const [username, setUsername] = useState('');
@@ -87,6 +87,61 @@ export default function Index() {
     }
   };
 
+
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 16,
+    },
+    loadingContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: 32,
+      padding: 16,
+      borderRadius: 10,
+    },
+    logo: {
+      width: 120,
+      height: 120,
+    },
+    title: {
+      fontSize: 32,
+      fontWeight: 'bold',
+      marginBottom: 16,
+    },
+    formContainer: {
+      padding: 16,
+      borderRadius: 10,
+    },
+    input: {
+      marginBottom: 16,
+      backgroundColor: surfaceVariant,
+    },
+    forgotPassword: {
+      alignSelf: 'flex-end',
+      marginBottom: 16,
+    },
+    button: {
+      marginTop: 8,
+      paddingVertical: 4,
+    },
+    biometricButton: {
+      marginTop: 16,
+    },
+    registerPrompt: {
+      marginTop: 24,
+      alignItems: 'center',
+    },
+  });
+
   // Mostrar indicador de carga mientras se verifica la sesión
   if (isAuthLoading) {
     return (
@@ -123,7 +178,13 @@ export default function Index() {
             style={styles.input}
             mode="outlined"
             autoCapitalize="none"
-            theme={{ colors: { primary: tintColor } }}
+            theme={{
+              colors: {
+                primary: tintColor,
+                onSurface: onSurfaceVariant,
+                surface: surfaceVariant,
+              }
+            }}
           />
 
           <TextInput
@@ -133,11 +194,18 @@ export default function Index() {
             secureTextEntry={secureTextEntry}
             style={styles.input}
             mode="outlined"
-            theme={{ colors: { primary: tintColor } }}
+            theme={{
+              colors: {
+                primary: tintColor,
+                onSurface: onSurfaceVariant,
+                surface: surfaceVariant,
+              }
+            }}
             right={
               <TextInput.Icon
                 icon={secureTextEntry ? "eye" : "eye-off"}
                 onPress={() => setSecureTextEntry(!secureTextEntry)}
+                color={onSurfaceVariant}
               />
             }
           />
@@ -190,54 +258,4 @@ export default function Index() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-    padding: 16,
-    borderRadius: 10,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  formContainer: {
-    padding: 16,
-    borderRadius: 10,
-  },
-  input: {
-    marginBottom: 16,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 16,
-  },
-  button: {
-    marginTop: 8,
-    paddingVertical: 4,
-  },
-  biometricButton: {
-    marginTop: 16,
-  },
-  registerPrompt: {
-    marginTop: 24,
-    alignItems: 'center',
-  },
-});
+
