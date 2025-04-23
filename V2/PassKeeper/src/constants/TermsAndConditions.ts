@@ -1,4 +1,4 @@
-// Texto extraído del PDF "Términos y Condiciones de Uso de la Aplicación Móvil.pdf"
+// Términos y Condiciones de Uso de la Aplicación Móvil PassKeeper
 export const termsAndConditions = {
   es: `
 Términos y Condiciones de Uso de la Aplicación Móvil PassKeeper
@@ -9,13 +9,13 @@ Estos Términos y Condiciones regulan el uso de la aplicación móvil PassKeeper
 
 2. Definiciones
 
-- **Aplicación**: Se refiere a PassKeeper, una aplicación móvil diseñada para almacenar y gestionar contraseñas de forma segura.
-- **Usuario**: Cualquier persona que descargue, instale o utilice la Aplicación.
-- **Datos del Usuario**: Información proporcionada por el Usuario, incluyendo contraseñas, nombres de usuario y otra información relacionada.
+- *Aplicación*: Se refiere a PassKeeper, una aplicación móvil diseñada para almacenar y gestionar contraseñas de forma segura.
+- *Usuario*: Cualquier persona que descargue, instale o utilice la Aplicación.
+- *Datos del Usuario*: Información proporcionada por el Usuario, incluyendo contraseñas, nombres de usuario y otra información relacionada.
 
 3. Privacidad y Seguridad
 
-La Aplicación está diseñada para funcionar completamente sin conexión a Internet. Todos los datos se almacenan localmente en el dispositivo del Usuario y no se transmiten a servidores externos. La seguridad de los datos depende de las medidas de protección implementadas en el dispositivo del Usuario.
+La Aplicación está diseñada para funcionar completamente sin conexión a Internet. Todos los datos se almacenan localmente en el dispositivo del Usuario y no se transmiten a servidores externos. Toda la información sensible se almacena cifrada utilizando claves aleatorias únicas generadas para cada usuario, lo que garantiza que ni siquiera los creadores de la aplicación tengan forma alguna de descifrar estos datos. La seguridad de los datos depende de las medidas de protección implementadas en el dispositivo del Usuario.
 
 4. Uso de la Aplicación
 
@@ -72,7 +72,7 @@ These Terms and Conditions govern the use of the PassKeeper mobile application (
 
 3. Privacy and Security
 
-The Application is designed to function completely offline. All data is stored locally on the User's device and is not transmitted to external servers. The security of the data depends on the protection measures implemented on the User's device.
+The Application is designed to function completely offline. All data is stored locally on the User's device and is not transmitted to external servers. All sensitive information is stored encrypted using unique random keys generated for each user, ensuring that even the creators of the application have no way to decrypt this data. The security of the data depends on the protection measures implemented on the User's device.
 
 4. Use of the Application
 
