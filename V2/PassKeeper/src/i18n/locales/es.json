@@ -59,12 +59,21 @@
         "passwordUpdated": "Contraseña actualizada",
         "passwordDeleted": "Contraseña eliminada",
         "passwordCopied": "Contraseña copiada al portapapeles",
-        "updatingError": "Error al actualizar la contraseña"
+        "updatingError": "Error al actualizar la contraseña",
+        "unknownCategory": "Categoría desconocida"
     },
     "categories": {
         "title": "Categorías",
         "addCategory": "Agregar Categoría",
+        "editCategory": "Editar Categoría",
         "categoryName": "Nombre de la Categoría",
+        "categoryIcon": "Icono de Categoría",
+        "categoryColor": "Color de Categoría",
+        "deleteCategory": "Eliminar Categoría",
+        "deleteCategoryConfirm": "¿Estás seguro de que deseas eliminar la categoría '{name}'?",
+        "noCategories": "No se encontraron categorías",
+        "add": "Agregar",
+        "delete": "Eliminar",
         "email": "Correo Electrónico",
         "website": "Sitio Web",
         "banking": "Bancos",

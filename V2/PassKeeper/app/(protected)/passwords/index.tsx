@@ -177,7 +177,7 @@ export default function PasswordsScreen() {
         <Card.Title
           title={item.title}
           subtitle={categoryDisplayName}
-          titleStyle={{ color: onSurfaceColor }} // Uses destructured onSurfaceColor
+          titleStyle={{ color: onSurfaceColor, fontWeight: 'bold' }} // Uses destructured onSurfaceColor
           subtitleStyle={{ color: onSurfaceColor }} // Uses destructured onSurfaceColor
           left={(props) =>
             categoryIcon ? (
@@ -255,7 +255,7 @@ export default function PasswordsScreen() {
   // Componente para mostrar cuando no hay contraseñas
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
-      <MaterialCommunityIcons name="lock-outline" size={80} color={avatarTextColor} style={styles.emptyIcon} />
+      <MaterialCommunityIcons name='lock-off' size={80} color={avatarTextColor} style={styles.emptyIcon} />
       <ThemedText style={styles.emptyTitle}>{t('passwords.noPasswordsTitle')}</ThemedText>
       <ThemedText style={styles.emptyText}>{t('passwords.noPasswordsDescription')}</ThemedText>
     </View>

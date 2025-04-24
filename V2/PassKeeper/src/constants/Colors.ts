@@ -53,10 +53,15 @@ export default {
 export const categoryColors = {
     general: '#778899',       // LightSlateGray (Gris pizarra claro)
     socialMedia: '#C71585',
+    entertainment: '#414EA5',
     email: '#CD4C2C',         // IndianRed (Rojo indio)
     banking: '#02A5A5',
     shopping: '#FFD700',      // Gold (Amarillo dorado)
-    entertainment: '#414EA5',
     work: '#1D83AB',
+    travel: '#F05880',
+    utilities: '#FFD980',
+    health: '#FF6347',        // Tomato (Tomate)
+    education: '#808000',     // OliveDrab (Oliva dourada)
+    lifestyle: '#82AC7C',     // Green (Verde)
 };
 

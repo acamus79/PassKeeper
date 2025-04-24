@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, ReactNode } from 'react';
 import { Modal, StyleSheet, View, ScrollView, Animated, Dimensions, NativeScrollEvent } from 'react-native';
 import { Button } from 'react-native-paper';
 import { ThemedText } from '../ui/ThemedText';
@@ -11,7 +11,7 @@ interface ScrollModalProps {
     onAccept: () => void;
     onCancel: () => void;
     title: string;
-    content: string;
+    content: ReactNode;
     acceptText?: string;
     cancelText?: string;
     requireFullScroll?: boolean;

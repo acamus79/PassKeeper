@@ -39,6 +39,7 @@ export default function SettingsScreen() {
     const warningColor = useThemeColor({}, 'warning');
     const infoColor = useThemeColor({}, 'info');
     const successColor = useThemeColor({}, 'success');
+    const onSurfaceVariant = useThemeColor({}, 'onSurfaceVariant');
 
     const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
     const [autoLockEnabled, setAutoLockEnabled] = useState(true);
@@ -190,8 +191,10 @@ export default function SettingsScreen() {
                     {isAvailable && (
                         <List.Item
                             title={t('settings.biometricAuth')}
+                            titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
                             description={t('settings.biometricDescription')}
-                            left={props => <List.Icon {...props} icon="fingerprint" />}
+                            descriptionStyle={{ color: onSurfaceVariant }}
+                            left={props => <List.Icon {...props} icon="fingerprint" color={infoColor} />}
                             right={props =>
                                 <Switch
                                     value={isBiometricEnabled}
@@ -203,8 +206,10 @@ export default function SettingsScreen() {
 
                     <List.Item
                         title={t('settings.autoLock')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
                         description={t('settings.autoLockDescription')}
-                        left={props => <List.Icon {...props} icon="lock-clock" />}
+                        descriptionStyle={{ color: onSurfaceVariant }}
+                        left={props => <List.Icon {...props} icon="lock-clock" color={infoColor} />}
                         right={props =>
                             <Switch
                                 value={autoLockEnabled}
@@ -216,8 +221,10 @@ export default function SettingsScreen() {
                     {autoLockEnabled && (
                         <List.Item
                             title={t('settings.autoLockTimeout')}
+                            titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
                             description={`La aplicación se bloqueará después de ${autoLockTimeout} ${autoLockTimeout === 1 ? 'minuto' : 'minutos'} de inactividad`}
-                            left={props => <List.Icon {...props} icon="timer-outline" />}
+                            descriptionStyle={{ color: onSurfaceVariant }}
+                            left={props => <List.Icon {...props} icon="timer-outline" color={infoColor} />}
                             right={props => (
                                 <List.Icon {...props} icon="chevron-right" />
                             )}
@@ -236,14 +243,18 @@ export default function SettingsScreen() {
                     <List.Subheader>{t('settings.appearance')}</List.Subheader>
                     <List.Item
                         title={t('settings.darkMode')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
                         description={isDarkMode ? t('settings.darkModeEnabled') : t('settings.darkModeDisabled')}
-                        left={props => <List.Icon {...props} icon="theme-light-dark" />}
+                        descriptionStyle={{ color: onSurfaceVariant }}
+                        left={props => <List.Icon {...props} icon="theme-light-dark" color={infoColor} />}
                         right={props => <Switch value={isDarkMode} onValueChange={handleToggleDarkMode} />}
                     />
                     <List.Item
                         title={t('settings.language')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
                         description={currentLanguage === 'es' ? 'Español' : 'English'}
-                        left={props => <List.Icon {...props} icon="translate" />}
+                        descriptionStyle={{ color: onSurfaceVariant }}
+                        left={props => <List.Icon {...props} icon="translate" color={infoColor} />}
                         onPress={handleToggleLanguage}
                         right={props => <List.Icon {...props} icon="chevron-right" />}
                     />
@@ -253,26 +264,34 @@ export default function SettingsScreen() {
                     <List.Subheader>{t('settings.about')}</List.Subheader>
                     <List.Item
                         title={t('settings.version')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
                         description={version}
+                        descriptionStyle={{ color: onSurfaceVariant }}
                         left={props => <List.Icon {...props} icon="information" color={infoColor} />}
                     />
                     <List.Item
                         title={t('settings.FAQ')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
                         description={t('settings.FAQDescription')}
+                        descriptionStyle={{ color: onSurfaceVariant }}
                         left={props => <List.Icon {...props} icon="help-circle-outline" color={infoColor} />}
                         onPress={() => setFaqModalVisible(true)}
                         right={props => <List.Icon {...props} icon="chevron-right" />}
                     />
                     <List.Item
                         title={t('settings.termsAndConditions')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
                         description={t('settings.termsAndConditionsDescription')}
+                        descriptionStyle={{ color: onSurfaceVariant }}
                         left={props => <List.Icon {...props} icon="file-document-outline" color={infoColor} />}
                         onPress={() => setTermsModalVisible(true)}
                         right={props => <List.Icon {...props} icon="chevron-right" />}
                     />
                     <List.Item
                         title={t('settings.privacyPolicy')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
                         description={t('settings.privacyPolicyDescription')}
+                        descriptionStyle={{ color: onSurfaceVariant }}
                         left={props => <List.Icon {...props} icon="shield-lock-outline" color={infoColor} />}
                         onPress={() => setPrivacyModalVisible(true)}
                         right={props => <List.Icon {...props} icon="chevron-right" />}
