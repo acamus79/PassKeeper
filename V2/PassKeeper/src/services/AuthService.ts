@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { User } from '../types/entities';
 import { SecurityUtils } from '@utils/SecurityUtils';
-import { 
+import {
     USER_SALT_KEY_PREFIX,
     SESSION_LAST_ACTIVITY,
     SESSION_INACTIVITY_TIMEOUT,
@@ -15,6 +15,67 @@ import { UserRepository } from '../repositories/UserRepository';
 const DEFAULT_INACTIVITY_TIMEOUT = 3 * 60 * 1000; // 3 minutos en milisegundos
 
 export const AuthService = {
+    /**
+     * Verifica la contraseña del usuario sin iniciar sesión
+     */
+    verifyPassword: async (username: string, password: string): Promise<boolean> => {
+        try {
+            // Buscar usuario por nombre de usuario
+            const user: User | null = await UserRepository.findByUsername(username);
+            if (!user) {
+                return false;
+            }
+
+            // Obtener el salt del usuario desde SecureStore
+            const saltKey = `${USER_SALT_KEY_PREFIX}${user.id}`;
+            const salt = await SecurityUtils.secureRetrieve(saltKey);
+            if (!salt) {
+                return false;
+            }
+
+            // Verificar la contraseña usando el salt
+            return await SecurityUtils.checkPassword(
+                password,
+                user.password,
+                salt
+            );
+        } catch (error) {
+            console.error('Password verification error:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Verifica la contraseña del usuario usando su ID
+     * Este método es útil cuando ya conocemos el ID del usuario y solo necesitamos verificar su contraseña
+     */
+    verifyPasswordById: async (userId: number, password: string): Promise<boolean> => {
+        try {
+            // Buscar usuario por ID
+            const user: User | null = await UserRepository.findById(userId);
+            if (!user) {
+                return false;
+            }
+
+            // Obtener el salt del usuario desde SecureStore
+            const saltKey = `${USER_SALT_KEY_PREFIX}${userId}`;
+            const salt = await SecurityUtils.secureRetrieve(saltKey);
+            if (!salt) {
+                return false;
+            }
+
+            // Verificar la contraseña usando el salt
+            return await SecurityUtils.checkPassword(
+                password,
+                user.password,
+                salt
+            );
+        } catch (error) {
+            console.error('Password verification by ID error:', error);
+            return false;
+        }
+    },
+
     /**
      * Actualiza la marca de tiempo de la última actividad
      */
@@ -161,7 +222,7 @@ export const AuthService = {
                 saveSession(user),
                 AuthService.updateLastActivity()
             ]);
-            
+
             return true;
         } catch (error) {
             console.error('Login error:', error);
@@ -262,7 +323,7 @@ const saveSession = async (user: User): Promise<void> => {
         if (autoLockExists === null) {
             promises.push(AuthService.setAutoLockEnabled(true));
         }
-        
+
         if (timeoutExists === null) {
             promises.push(AuthService.setInactivityTimeout(DEFAULT_INACTIVITY_TIMEOUT));
         }

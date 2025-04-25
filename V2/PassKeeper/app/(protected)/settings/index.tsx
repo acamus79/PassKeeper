@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
+import { StyleSheet, ScrollView, Alert } from 'react-native';
 import { List, Switch, Divider } from 'react-native-paper';
 import { ThemedView } from '@components/ui/ThemedView';
 import useTranslation from '@hooks/useTranslation';
@@ -8,6 +8,7 @@ import { useTheme } from '@contexts/ThemeContext';
 import useBiometrics from '@hooks/useBiometrics';
 import { UserService } from '@services/UserService';
 import { AuthService } from '@services/AuthService';
+import { ExportImportService } from '@services/ExportImportService';
 import { resetDatabase } from '@database/database';
 import * as SecureStore from 'expo-secure-store';
 import useThemeColor from '@hooks/useThemeColor';
@@ -16,6 +17,7 @@ import { ScrollModal } from '@components/modals/ScrollModal';
 import { termsAndConditions } from '@constants/TermsAndConditions';
 import { faqs } from '@constants/FAQs';
 import { privacyPolicy } from '@constants/PrivacyPolicy';
+import { router } from 'expo-router';
 
 // Definición de estilos estáticos
 const styles = StyleSheet.create({
@@ -187,7 +189,6 @@ export default function SettingsScreen() {
             <ScrollView>
                 <List.Section>
                     <List.Subheader>{t('settings.security')}</List.Subheader>
-
                     {isAvailable && (
                         <List.Item
                             title={t('settings.biometricAuth')}
@@ -203,7 +204,6 @@ export default function SettingsScreen() {
                             }
                         />
                     )}
-
                     <List.Item
                         title={t('settings.autoLock')}
                         titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
@@ -217,7 +217,6 @@ export default function SettingsScreen() {
                             />
                         }
                     />
-
                     {autoLockEnabled && (
                         <List.Item
                             title={t('settings.autoLockTimeout')}
@@ -237,7 +236,17 @@ export default function SettingsScreen() {
                             }}
                         />
                     )}
+                    <List.Item
+                        title={t('settings.exportImport')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
+                        description={t('settings.exportImportDescription')}
+                        descriptionStyle={{ color: onSurfaceVariant }}
+                        left={props => <List.Icon {...props} icon="database-export-outline" color={infoColor} />}
+                        onPress={() => router.push('/settings/export-import')}
+                    />
                 </List.Section>
+
+                <Divider style={styles.divider} />
 
                 <List.Section>
                     <List.Subheader>{t('settings.appearance')}</List.Subheader>
@@ -260,15 +269,10 @@ export default function SettingsScreen() {
                     />
                 </List.Section>
 
+                <Divider style={styles.divider} />
+
                 <List.Section>
-                    <List.Subheader>{t('settings.about')}</List.Subheader>
-                    <List.Item
-                        title={t('settings.version')}
-                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
-                        description={version}
-                        descriptionStyle={{ color: onSurfaceVariant }}
-                        left={props => <List.Icon {...props} icon="information" color={infoColor} />}
-                    />
+                    <List.Subheader>{t('settings.info')}</List.Subheader>
                     <List.Item
                         title={t('settings.FAQ')}
                         titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
@@ -276,6 +280,15 @@ export default function SettingsScreen() {
                         descriptionStyle={{ color: onSurfaceVariant }}
                         left={props => <List.Icon {...props} icon="help-circle-outline" color={infoColor} />}
                         onPress={() => setFaqModalVisible(true)}
+                        right={props => <List.Icon {...props} icon="chevron-right" />}
+                    />
+                    <List.Item
+                        title={t('settings.privacyPolicy')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
+                        description={t('settings.privacyPolicyDescription')}
+                        descriptionStyle={{ color: onSurfaceVariant }}
+                        left={props => <List.Icon {...props} icon="shield-lock-outline" color={infoColor} />}
+                        onPress={() => setPrivacyModalVisible(true)}
                         right={props => <List.Icon {...props} icon="chevron-right" />}
                     />
                     <List.Item
@@ -288,15 +301,12 @@ export default function SettingsScreen() {
                         right={props => <List.Icon {...props} icon="chevron-right" />}
                     />
                     <List.Item
-                        title={t('settings.privacyPolicy')}
+                        title={t('settings.version')}
                         titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
-                        description={t('settings.privacyPolicyDescription')}
+                        description={version}
                         descriptionStyle={{ color: onSurfaceVariant }}
-                        left={props => <List.Icon {...props} icon="shield-lock-outline" color={infoColor} />}
-                        onPress={() => setPrivacyModalVisible(true)}
-                        right={props => <List.Icon {...props} icon="chevron-right" />}
+                        left={props => <List.Icon {...props} icon="information" color={infoColor} />}
                     />
-
                 </List.Section>
 
                 <Divider style={styles.divider} />
@@ -366,15 +376,11 @@ export default function SettingsScreen() {
                             try {
                                 const lastActivityStr = await SecureStore.getItemAsync('session_last_activity');
                                 const timeoutStr = await SecureStore.getItemAsync('session_inactivity_timeout');
-
                                 const lastActivity = lastActivityStr ? parseInt(lastActivityStr, 10) : null;
                                 const timeout = timeoutStr ? parseInt(timeoutStr, 10) : null;
-
                                 const currentTime = Date.now();
                                 const timeSinceLastActivity = lastActivity ? (currentTime - lastActivity) / 1000 / 60 : null;
-
                                 const hasExpired = await AuthService.hasSessionExpired();
-
                                 const message = `
                                 Última actividad: ${lastActivity ? new Date(lastActivity).toLocaleTimeString() : 'No disponible'}
                                 Tiempo desde última actividad: ${timeSinceLastActivity ? timeSinceLastActivity.toFixed(2) + ' minutos' : 'No disponible'}
@@ -382,7 +388,6 @@ export default function SettingsScreen() {
                                 Auto-lock habilitado: ${autoLockEnabled ? 'Sí' : 'No'}
                                 La sesión ha expirado: ${hasExpired ? 'Sí' : 'No'}
                                 `;
-
                                 alert(message);
                             } catch (error) {
                                 console.error('Error al obtener estado de sesión:', error);
