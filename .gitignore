@@ -3,8 +3,11 @@
 PassKeeper/.gradle/*
 PassKeeper/build/*
 PassKeeper/app/build/*
-*.android
-*.expo
+V2/PassKeeper/.gradle/*
+V2/PassKeeper/build/*
+V2/PassKeeper/app/build/*
+V2/PassKeeper/android/*
+V2/PassKeeper/expo/*
 
 # Local configuration file (sdk path, etc)
 PassKeeper/local.properties
