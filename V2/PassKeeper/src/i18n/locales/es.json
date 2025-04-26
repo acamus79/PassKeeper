@@ -65,8 +65,8 @@
         "darkModeEnabled": "Modo oscuro activado",
         "darkModeDisabled": "Modo claro activado",
         "language": "Idioma",
-        "about": "Acerca de",
-        "version": "Versión",
+        "info": "Información",
+        "version": "PassKeeper Versión",
         "FAQ": "Preguntas frecuentes",
         "FAQDescription": "Respuestas a preguntas comunes",
         "termsAndConditions": "Términos y condiciones",
@@ -90,7 +90,11 @@
         "emptyPassword": "Contraseña vacía",
         "invalidPassword": "Contraseña inválida",
         "enterPassword": "Introduce la contraseña",
-        "pressConfirmToVerify": "Escribe tu contraseña y presiona Confirmar"
+        "pressConfirmToVerify": "Escribe tu contraseña y presiona Confirmar",
+        "remove": "Eliminar Cuenta",
+        "confirmDeleteTitle": "Confirmar Eliminación",
+        "confirmDeleteMessage": "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.",
+        "accountDeleted": "Cuenta eliminada"
     },
     "login": {
         "title": "Iniciar Sesión",
@@ -125,7 +129,8 @@
         "passwordDeleted": "Contraseña eliminada",
         "passwordCopied": "Contraseña copiada al portapapeles",
         "updatingError": "Error al actualizar la contraseña",
-        "unknownCategory": "Categoría desconocida"
+        "unknownCategory": "Categoría desconocida",
+        "savingError": "Error al guardar la contraseña"
     },
     "categories": {
         "title": "Categorías",

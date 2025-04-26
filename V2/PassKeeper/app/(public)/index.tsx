@@ -125,10 +125,6 @@ export default function Index() {
       marginBottom: 16,
       backgroundColor: surfaceVariant,
     },
-    forgotPassword: {
-      alignSelf: 'flex-end',
-      marginBottom: 16,
-    },
     button: {
       marginTop: 8,
       paddingVertical: 4,
@@ -137,7 +133,7 @@ export default function Index() {
       marginTop: 16,
     },
     registerPrompt: {
-      marginTop: 24,
+      marginTop: 32,
       alignItems: 'center',
     },
   });
@@ -210,15 +206,6 @@ export default function Index() {
             }
           />
 
-          <TouchableOpacity
-            style={styles.forgotPassword}
-            onPress={() => router.push('/forgot-password')}
-          >
-            <ThemedText style={{ color: tintColor }}>
-              {t('login.forgotPassword')}
-            </ThemedText>
-          </TouchableOpacity>
-
           <Button
             mode="contained"
             onPress={handleLogin}
@@ -248,7 +235,7 @@ export default function Index() {
             onPress={() => router.push('/register')}
             disabled={isLoading}
           >
-            <ThemedText style={{ color: tintColor }}>
+            <ThemedText style={{ color: tintColor, fontSize: 16 }}>
               {t('login.registerPrompt')}
             </ThemedText>
           </TouchableOpacity>

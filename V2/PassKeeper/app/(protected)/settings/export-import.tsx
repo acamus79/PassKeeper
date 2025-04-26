@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Alert, TextInput, ScrollView, Clipboard } from 'react-native';
 import { Button, Text, ActivityIndicator, Divider, Card, IconButton, Portal, Modal, Surface } from 'react-native-paper';
 import { ThemedView } from '@components/ui/ThemedView';
+import { useNavigation } from '@react-navigation/native';
 import useTranslation from '@hooks/useTranslation';
 import { useAuth } from '@contexts/AuthContext';
 import { ExportImportService } from '@services/ExportImportService';
@@ -11,8 +12,9 @@ import * as DocumentPicker from 'expo-document-picker';
 import { AuthService } from '@services/AuthService';
 
 export default function ExportImportScreen() {
+    const navigation = useNavigation();
     const { t } = useTranslation();
-    const { userId, username } = useAuth();
+    const { userId } = useAuth();
     const { isAvailable, authenticate } = useBiometrics();
 
     // Estados
@@ -27,15 +29,17 @@ export default function ExportImportScreen() {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [password, setPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
-    const [authPendingAction, setAuthPendingAction] = useState<(() => Promise<void>) | null>(null);
 
     // Colores del tema
     const primaryColor = useThemeColor({}, 'primary');
     const errorColor = useThemeColor({}, 'error');
-    const warningColor = useThemeColor({}, 'warning');
-    const infoColor = useThemeColor({}, 'info');
-    const successColor = useThemeColor({}, 'success');
     const onSurfaceVariant = useThemeColor({}, 'onSurfaceVariant');
+
+    useEffect(() => {
+        navigation.setOptions({
+            title: t('settings.exportImportTitle')
+        });
+    }, [navigation, t]);
 
     // Función para autenticar al usuario antes de exportar/importar
     const authenticateUser = async () => {
@@ -43,7 +47,7 @@ export default function ExportImportScreen() {
             // Verificar si la biometría está disponible
             if (isAvailable) {
                 // Intentar autenticación biométrica primero
-                const biometricSuccess = await authenticate(t('biometric.confirmAction'));
+                const biometricSuccess = await authenticate(t('settings.biometric.confirmAction'));
                 if (biometricSuccess) {
                     return true;
                 }
@@ -57,7 +61,7 @@ export default function ExportImportScreen() {
                 setShowPasswordModal(true);
 
                 // Guardar la función de resolución para usarla cuando se complete la verificación
-                window.authResolve = resolve;
+                authResolve = resolve;
             });
         } catch (error) {
             console.error('Error en autenticación:', error);
@@ -69,12 +73,12 @@ export default function ExportImportScreen() {
     const verifyPasswordAndContinue = async () => {
         // Validar que exista un ID de usuario y contraseña antes de intentar verificar
         if (!userId || !password.trim()) {
-            setPasswordError(t('auth.emptyPassword'));
+            setPasswordError(t('settings.emptyPassword'));
             return;
         }
 
         // Activar estado de carga
-        setLoading(true);
+        //setLoading(true);
         try {
             // Usar el servicio de autenticación para verificar la contraseña por ID
             // Esto mantiene la lógica de verificación en la capa de servicio
@@ -84,13 +88,13 @@ export default function ExportImportScreen() {
                 // Si la contraseña es válida, cerrar el modal y continuar con la acción pendiente
                 setShowPasswordModal(false);
                 setPassword('');
-                if (window.authResolve) {
-                    window.authResolve(true);
-                    delete window.authResolve;
+                if (authResolve) {
+                    authResolve(true);
+                    authResolve = undefined;
                 }
             } else {
                 // Si la contraseña es inválida, mostrar error
-                setPasswordError(t('auth.invalidPassword'));
+                setPasswordError(t('settings.invalidPassword'));
             }
         } catch (error) {
             console.error('Error al verificar contraseña:', error);
@@ -103,9 +107,9 @@ export default function ExportImportScreen() {
     // Función para cancelar la autenticación por contraseña
     const cancelPasswordAuth = () => {
         setShowPasswordModal(false);
-        if (window.authResolve) {
-            window.authResolve(false);
-            delete window.authResolve;
+        if (authResolve) {
+            authResolve(false);
+            authResolve = undefined;
         }
     };
 
@@ -140,7 +144,7 @@ export default function ExportImportScreen() {
     };
 
     // Función para copiar el salt al portapapeles
-    const copySaltToClipboard = () => {
+    const copySaltToClipboard = async () => {
         if (userSalt) {
             Clipboard.setString(userSalt);
             setSaltCopied(true);
@@ -163,7 +167,7 @@ export default function ExportImportScreen() {
                 setShowSaltDisplay(false);
                 Alert.alert(
                     t('settings.exportSuccess'),
-                    t('settings.exportWithoutSaltSuccess')
+                    t('settings.exportSuccessMessage')
                 );
             } else {
                 setLoading(false);
@@ -270,12 +274,10 @@ export default function ExportImportScreen() {
     return (
         <ThemedView style={styles.container}>
             <ScrollView>
-                <Text style={styles.title}>{t('settings.exportImportTitle')}</Text>
-
                 {/* Sección de Exportación */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>{t('settings.exportTitle')}</Text>
-                    <Text style={styles.description}>{t('settings.exportDescription')}</Text>
+                    <Text style={[styles.sectionTitle, { color: onSurfaceVariant }]}>{t('settings.exportTitle')}</Text>
+                    <Text style={[styles.description, { color: onSurfaceVariant }]}>{t('settings.exportDescription')}</Text>
 
                     <Button
                         mode="contained"
@@ -292,22 +294,25 @@ export default function ExportImportScreen() {
 
                 {/* Sección de Importación */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>{t('settings.importTitle')}</Text>
-                    <Text style={styles.description}>{t('settings.importDescription')}</Text>
+                    <Text style={[styles.sectionTitle, { color: onSurfaceVariant }]}>{t('settings.importTitle')}</Text>
+                    <Text style={[styles.description, { color: onSurfaceVariant }]}>{t('settings.importDescription')}</Text>
 
                     {showSaltInput ? (
                         <Card style={styles.card}>
                             <Card.Title
                                 title={t('settings.importStepSalt')}
                                 subtitle={importStep === 'salt' ? t('settings.step1of2') : t('settings.step2of2')}
+                                titleStyle={{ color: onSurfaceVariant }}
+                                subtitleStyle={{ color: onSurfaceVariant }}
                             />
                             <Card.Content>
                                 {importStep === 'salt' ? (
                                     <View>
-                                        <Text style={styles.cardText}>{t('settings.enterSaltDescription')}</Text>
+                                        <Text style={[styles.cardText, { color: onSurfaceVariant }]}>{t('settings.enterSaltDescription')}</Text>
                                         <TextInput
-                                            style={styles.saltInput}
+                                            style={[styles.saltInput, { color: onSurfaceVariant }]}
                                             placeholder={t('settings.enterSalt')}
+                                            placeholderTextColor={onSurfaceVariant}
                                             value={externalSalt}
                                             onChangeText={setExternalSalt}
                                             autoCapitalize="none"
@@ -338,7 +343,7 @@ export default function ExportImportScreen() {
                                     </View>
                                 ) : (
                                     <View>
-                                        <Text style={styles.cardText}>{t('settings.selectFileDescription')}</Text>
+                                        <Text style={[styles.cardText, { color: onSurfaceVariant }]}>{t('settings.selectFileDescription')}</Text>
                                         <Button
                                             mode="contained"
                                             onPress={pickImportFile}
@@ -349,7 +354,7 @@ export default function ExportImportScreen() {
                                             {t('settings.selectFile')}
                                         </Button>
                                         {importFile && (
-                                            <Text style={styles.fileSelected}>{t('settings.fileSelected')}</Text>
+                                            <Text style={[styles.fileSelected, { color: onSurfaceVariant }]}>{t('settings.fileSelected')}</Text>
                                         )}
                                     </View>
                                 )}
@@ -373,11 +378,11 @@ export default function ExportImportScreen() {
             <Portal>
                 <Modal visible={showSaltDisplay} onDismiss={() => setShowSaltDisplay(false)} contentContainerStyle={styles.modalContainer}>
                     <Surface style={styles.modalSurface}>
-                        <Text style={styles.modalTitle}>{t('settings.yourPrivateKey')}</Text>
-                        <Text style={styles.modalWarning}>{t('settings.saltWarning')}</Text>
+                        <Text style={[styles.modalTitle, { color: onSurfaceVariant }]}>{t('settings.yourPrivateKey')}</Text>
+                        <Text style={[styles.modalWarning, { color: errorColor }]}>{t('settings.saltWarning')}</Text>
 
                         <View style={styles.saltDisplayContainer}>
-                            <Text selectable style={styles.saltText}>{userSalt}</Text>
+                            <Text selectable style={[styles.saltText, { color: onSurfaceVariant }]}>{userSalt}</Text>
                             <IconButton
                                 icon="content-copy"
                                 size={20}
@@ -387,10 +392,10 @@ export default function ExportImportScreen() {
                         </View>
 
                         {saltCopied && (
-                            <Text style={styles.copiedText}>{t('settings.saltCopied')}</Text>
+                            <Text style={[styles.copiedText, { color: 'green' }]}>{t('settings.saltCopied')}</Text>
                         )}
 
-                        <Text style={styles.modalInstructions}>{t('settings.saltInstructions')}</Text>
+                        <Text style={[styles.modalInstructions, { color: onSurfaceVariant }]}>{t('settings.saltInstructions')}</Text>
 
                         <View style={styles.modalButtonContainer}>
                             <Button
@@ -418,7 +423,7 @@ export default function ExportImportScreen() {
             {loading && (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={primaryColor} />
-                    <Text style={styles.loadingText}>{t('common.loading')}</Text>
+                    <Text style={[styles.loadingText]}>{t('common.loading')}</Text>
                 </View>
             )}
 
@@ -426,17 +431,18 @@ export default function ExportImportScreen() {
             <Portal>
                 <Modal visible={showPasswordModal} onDismiss={cancelPasswordAuth} contentContainerStyle={styles.modalContainer}>
                     <Surface style={styles.modalSurface}>
-                        <Text style={styles.modalTitle}>{t('auth.enterPassword')}</Text>
+                        <Text style={styles.modalTitle}>{t('settings.enterPassword')}</Text>
                         <TextInput
-                            style={styles.saltInput}
-                            placeholder={t('auth.password')}
+                            style={[styles.saltInput, { color: onSurfaceVariant }]}
+                            placeholder={t('login.password')}
+                            placeholderTextColor={onSurfaceVariant}
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
                             autoCapitalize="none"
                         />
                         <Text style={{ marginBottom: 10, fontSize: 12, textAlign: 'center', color: onSurfaceVariant }}>
-                            {t('auth.pressConfirmToVerify', 'Escribe tu contraseña y presiona Confirmar')}
+                            {t('settings.pressConfirmToVerify')}
                         </Text>
                         {passwordError ? <Text style={{ color: errorColor, marginBottom: 10 }}>{passwordError}</Text> : null}
                         <View style={styles.modalButtonContainer}>
@@ -451,9 +457,8 @@ export default function ExportImportScreen() {
                                 mode="contained"
                                 onPress={verifyPasswordAndContinue}
                                 style={styles.modalButton}
-                                disabled={!password.trim()}
                             >
-                                {loading ? <ActivityIndicator size="small" color="white" /> : t('common.confirm')}
+                                {t('common.confirm')}
                             </Button>
                         </View>
                     </Surface>
@@ -463,22 +468,16 @@ export default function ExportImportScreen() {
     );
 }
 
-// Declaración global para TypeScript
-declare global {
-    interface Window {
-        authResolve?: (value: boolean) => void;
-    }
-}
+// Definición del tipo para almacenar la función de resolución
+type AuthResolveFunction = (value: boolean) => void;
+
+// Variable para almacenar la función de resolución
+let authResolve: AuthResolveFunction | undefined;
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 16,
     },
     section: {
         marginBottom: 24,
@@ -486,15 +485,24 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 8,
-    },
-    description: {
         marginBottom: 16,
         lineHeight: 20,
+    },
+    description: {
+        fontSize: 14,
+        marginBottom: 16,
+        lineHeight: 20,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginTop: 8,
+        paddingVertical: 4,
     },
     button: {
         flex: 1,
@@ -518,14 +526,9 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         marginTop: 8,
-        color: 'white',
     },
     saltInputContainer: {
         marginTop: 8,
-    },
-    saltInput: {
-        borderWidth: 1,
-        borderColor: '#ccc',
         borderRadius: 4,
         padding: 10,
         marginBottom: 8,
@@ -551,8 +554,6 @@ const styles = StyleSheet.create({
         color: 'green',
         fontWeight: 'bold',
         textAlign: 'center',
-    },
-    modalContainer: {
         padding: 20,
         margin: 20,
     },
@@ -568,14 +569,20 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     modalWarning: {
-        color: 'red',
         fontWeight: 'bold',
         marginBottom: 16,
         textAlign: 'center',
     },
+    saltInput: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        borderRadius: 4,
+        paddingHorizontal: 10,
+        marginBottom: 12,
+    },
     saltDisplayContainer: {
         flexDirection: 'row',
-        backgroundColor: '#f0f0f0',
         borderRadius: 4,
         padding: 10,
         marginVertical: 12,
@@ -590,13 +597,11 @@ const styles = StyleSheet.create({
         margin: 0,
     },
     copiedText: {
-        color: 'green',
         textAlign: 'center',
         marginBottom: 8,
     },
     modalInstructions: {
-        marginVertical: 12,
-        lineHeight: 20,
+        marginVertical: 16,
     },
     modalButtonContainer: {
         flexDirection: 'row',
@@ -604,7 +609,6 @@ const styles = StyleSheet.create({
         marginTop: 16,
     },
     modalButton: {
-        flex: 1,
-        marginHorizontal: 4,
+        marginHorizontal: 8,
     },
 });

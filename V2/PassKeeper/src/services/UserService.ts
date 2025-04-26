@@ -6,6 +6,7 @@ import {
     SESSION_AUTO_LOCK_ENABLED,
     SESSION_INACTIVITY_TIMEOUT
 } from '@constants/secureStorage';
+import { CategoryRepository } from '@/repositories/CategoryRepository';
 
 // Añadir métodos para gestionar la configuración de auto-lock
 export const UserService = {
@@ -86,6 +87,8 @@ export const UserService = {
         try {
             // Eliminar el usuario de la base de datos
             await UserRepository.delete(userId);
+            // Eliminar todas las categorías asociadas al usuario
+            await CategoryRepository.deleteByUserId(userId);
             // Eliminar el salt asociado del usuario
             await SecurityUtils.secureDelete(`user_salt_${userId}`);
         } catch (error) {

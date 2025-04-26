@@ -112,5 +112,20 @@ export const CategoryRepository = {
             console.error('Error deleting category:', error);
             throw error;
         }
+    },
+
+    deleteByUserId: async (userId: number): Promise<void> => {
+        try {
+            // Usar transacción para garantizar la integridad de la operación
+            await executeInTransaction(async () => {
+                await db.runAsync(
+                    'DELETE FROM categories WHERE user_id =?',
+                    userId
+                );
+            });
+        } catch (error) {
+            console.error('Error deleting categories by user id:', error);
+            throw error;
+        }
     }
 };

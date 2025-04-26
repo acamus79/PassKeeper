@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert } from 'react-native';
-import { List, Switch, Divider } from 'react-native-paper';
+import { StyleSheet, ScrollView, Alert, View } from 'react-native';
+import { List, Switch, Divider, Portal, Modal, Surface, TextInput, Button, Text } from 'react-native-paper';
 import { ThemedView } from '@components/ui/ThemedView';
 import useTranslation from '@hooks/useTranslation';
 import { useAuth } from '@contexts/AuthContext';
@@ -49,6 +49,13 @@ export default function SettingsScreen() {
     const [termsModalVisible, setTermsModalVisible] = useState(false);
     const [faqModalVisible, setFaqModalVisible] = useState(false);
     const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+
+    // Estados para el modal de eliminación de usuario
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [password, setPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    let authResolve: ((value: boolean) => void) | undefined;
 
     // Estilos que dependen del tema
     const themedStyles = StyleSheet.create({
@@ -166,6 +173,126 @@ export default function SettingsScreen() {
         }
     };
 
+    // Función para autenticar al usuario antes de eliminar la cuenta
+    const authenticateUser = async () => {
+        try {
+            // Verificar si la biometría está disponible
+            if (isAvailable) {
+                // Intentar autenticación biométrica primero
+                const biometricSuccess = await authenticate(t('settings.biometric.confirmAction'));
+                if (biometricSuccess) {
+                    return true;
+                }
+            }
+
+            // Si no hay biometría disponible o falló la autenticación biométrica,
+            // mostrar modal para autenticación por contraseña
+            return new Promise<boolean>((resolve) => {
+                setPassword('');
+                setPasswordError('');
+                setShowDeleteModal(true);
+
+                // Guardar la función de resolución para usarla cuando se complete la verificación
+                authResolve = resolve;
+            });
+        } catch (error) {
+            console.error('Error en autenticación:', error);
+            return false;
+        }
+    };
+
+    // Función para verificar la contraseña y continuar con la eliminación
+    const verifyPasswordAndDelete = async () => {
+        // Validar que exista un ID de usuario y contraseña antes de intentar verificar
+        if (!userId || !password.trim()) {
+            setPasswordError(t('settings.emptyPassword'));
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            // Usar el servicio de autenticación para verificar la contraseña por ID
+            const isValid = await AuthService.verifyPasswordById(userId, password);
+
+            if (isValid) {
+                // Si la contraseña es válida, cerrar el modal y continuar con la eliminación
+                setShowDeleteModal(false);
+                setPassword('');
+                if (authResolve) {
+                    authResolve(true);
+                    authResolve = undefined;
+                }
+                // Proceder con la eliminación del usuario
+                await deleteUser();
+            } else {
+                // Si la contraseña es inválida, mostrar error
+                setPasswordError(t('settings.invalidPassword'));
+            }
+        } catch (error) {
+            console.error('Error al verificar contraseña:', error);
+            setPasswordError(t('common.error'));
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // Función para cancelar la autenticación por contraseña
+    const cancelPasswordAuth = () => {
+        setShowDeleteModal(false);
+        if (authResolve) {
+            authResolve(false);
+            authResolve = undefined;
+        }
+    };
+
+    // Función para eliminar el usuario
+    const deleteUser = async () => {
+        if (!userId) {
+            Alert.alert(t('common.error'), t('settings.userNotFound'));
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+            // Eliminar el usuario usando el servicio
+            await UserService.deleteUser(userId);
+
+            // Mostrar mensaje de éxito y cerrar sesión
+            Alert.alert(
+                t('common.success'),
+                t('settings.accountDeleted'),
+                [{ text: t('common.ok'), onPress: handleLogout }]
+            );
+        } catch (error) {
+            console.error('Error al eliminar usuario:', error);
+            Alert.alert(t('common.error'), t('settings.deleteError'));
+            setIsDeleting(false);
+        }
+    };
+
+    // Función para iniciar el proceso de eliminación de usuario
+    const handleRemove = async () => {
+        // Mostrar confirmación antes de proceder
+        Alert.alert(
+            t('settings.confirmDeleteTitle'),
+            t('settings.confirmDeleteMessage'),
+            [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                    text: t('common.confirm'),
+                    style: 'destructive',
+                    onPress: async () => {
+                        // Autenticar al usuario antes de eliminar
+                        const isAuthenticated = await authenticateUser();
+                        if (isAuthenticated) {
+                            await deleteUser();
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     const handleResetDatabase = async () => {
         try {
             const success = await resetDatabase();
@@ -185,6 +312,16 @@ export default function SettingsScreen() {
         <ThemedView style={styles.container}>
             <ScrollView>
                 <List.Section>
+                    <List.Item
+                        title={t('settings.version')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
+                        description={version}
+                        descriptionStyle={{ color: onSurfaceVariant }}
+                        left={props => <List.Icon {...props} icon="information" color={infoColor} />}
+                    />
+                </List.Section>
+                <List.Section>
+                    <Divider style={styles.divider} />
                     <List.Subheader>{t('settings.security')}</List.Subheader>
                     {isAvailable && (
                         <List.Item
@@ -297,13 +434,6 @@ export default function SettingsScreen() {
                         onPress={() => setTermsModalVisible(true)}
                         right={props => <List.Icon {...props} icon="chevron-right" />}
                     />
-                    <List.Item
-                        title={t('settings.version')}
-                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
-                        description={version}
-                        descriptionStyle={{ color: onSurfaceVariant }}
-                        left={props => <List.Icon {...props} icon="information" color={infoColor} />}
-                    />
                 </List.Section>
 
                 <Divider style={styles.divider} />
@@ -314,6 +444,12 @@ export default function SettingsScreen() {
                         title={t('settings.logout')}
                         left={props => <List.Icon {...props} icon="logout" color={errorColor} />}
                         onPress={handleLogout}
+                        titleStyle={themedStyles.logoutText}
+                    />
+                    <List.Item
+                        title={t('settings.remove')}
+                        left={props => <List.Icon {...props} icon="skull" color={errorColor} />}
+                        onPress={handleRemove}
                         titleStyle={themedStyles.logoutText}
                     />
                 </List.Section>
@@ -426,6 +562,57 @@ export default function SettingsScreen() {
                 cancelText={t('common.close')}
                 requireFullScroll={false}
             />
+
+            {/* Modal de confirmación para eliminar cuenta */}
+            <Portal>
+                <Modal visible={showDeleteModal} onDismiss={cancelPasswordAuth} contentContainerStyle={{
+                    backgroundColor: 'transparent',
+                    padding: 20,
+                    margin: 20,
+                }}>
+                    <Surface style={{
+                        padding: 20,
+                        borderRadius: 10,
+                        elevation: 5,
+                    }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' }}>
+                            {t('settings.enterPassword')}
+                        </Text>
+                        <TextInput
+                            style={{ marginBottom: 16 }}
+                            placeholder={t('login.password')}
+                            placeholderTextColor={onSurfaceVariant}
+                            secureTextEntry
+                            value={password}
+                            onChangeText={setPassword}
+                            autoCapitalize="none"
+                        />
+                        <Text style={{ marginBottom: 10, fontSize: 12, textAlign: 'center', color: onSurfaceVariant }}>
+                            {t('settings.pressConfirmToVerify')}
+                        </Text>
+                        {passwordError ? <Text style={{ color: errorColor, marginBottom: 10, textAlign: 'center' }}>{passwordError}</Text> : null}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16 }}>
+                            <Button
+                                mode="outlined"
+                                onPress={cancelPasswordAuth}
+                                style={{ marginHorizontal: 8 }}
+                                disabled={isDeleting}
+                            >
+                                {t('common.cancel')}
+                            </Button>
+                            <Button
+                                mode="contained"
+                                onPress={verifyPasswordAndDelete}
+                                style={{ marginHorizontal: 8 }}
+                                loading={isDeleting}
+                                disabled={isDeleting}
+                            >
+                                {t('common.confirm')}
+                            </Button>
+                        </View>
+                    </Surface>
+                </Modal>
+            </Portal>
         </ThemedView>
     );
 }

@@ -14,7 +14,7 @@ export const CATEGORY_ICONS = [
     'key-variant',
     'key-wireless',
     'wifi-lock',
-    'book-education',
+    'archive-lock',
     'movie-open-play',
     'cart',
     'badge-account-horizontal',
@@ -22,5 +22,3 @@ export const CATEGORY_ICONS = [
 
 ];
 
-//'archive-lock',
-//'archive-lock-open',

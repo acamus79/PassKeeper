@@ -8,7 +8,6 @@ declare module 'expo-router' {
         'categories': {};
         'settings': {};
         'register': {};
-        'forgot-password': {};
         // Añade aquí más rutas según sea necesario
     }
 }

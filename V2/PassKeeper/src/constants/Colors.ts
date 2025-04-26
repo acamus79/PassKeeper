@@ -53,8 +53,8 @@ export default {
 export const categoryColors = {
     general: '#778899',       // LightSlateGray (Gris pizarra claro)
     socialMedia: '#C71585',
-    entertainment: '#414EA5',
-    email: '#CD4C2C',         // IndianRed (Rojo indio)
+    entertainment: '#CD4C2C',
+    email: '#7c5cff',         // IndianRed (Rojo indio)
     banking: '#02A5A5',
     shopping: '#FFD700',      // Gold (Amarillo dorado)
     work: '#1D83AB',

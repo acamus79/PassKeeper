@@ -19,7 +19,6 @@ export default function AuthLayout() {
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="register/index" options={{ title: t('register.title') }} />
-      <Stack.Screen name="forgot-password/index" options={{ title: t('forgotPassword.title') }} />
     </Stack>
   );
 }
