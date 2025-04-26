@@ -1,21 +1,36 @@
 ### Android ###
 # Gradle files
-PassKeeper/.gradle/*
-PassKeeper/build/*
-PassKeeper/app/build/*
+V1/PassKeeper/.gradle/*
+V1/PassKeeper/build/*
+V1/PassKeeper/app/build/*
+V2/PassKeeper/.gradle/*
+
+# React-native files
+V2/PassKeeper/build/*
+V2/PassKeeper/.expo/*
+V2/PassKeeper/android/*
+V2/PassKeeper/expo-env.d.*
+V2/PassKeeper/expo-*.json
+V2/PassKeeper/node_modules/*
+V2/PassKeeper/package-lock.json
+V2/PassKeeper/yarn-error.log
+V2/PassKeeper/yarn-debug.log
+V2/PassKeeper/yarn.lock
+V2/PassKeeper/ios/*
+
 
 # Local configuration file (sdk path, etc)
-PassKeeper/local.properties
+V1/PassKeeper/local.properties
 
 # Log/OS Files
-PassKeeper/*.log
+V1/PassKeeper/*.log
 
 # Android Studio generated files and folders
-PassKeeper/captures/
-PassKeeper/.externalNativeBuild/
-PassKeeper/.cxx/
-PassKeeper/*.apk
-PassKeeper/output.json
+V1/PassKeeper/captures/
+V1/PassKeeper/.externalNativeBuild/
+V1/PassKeeper/.cxx/
+V1/PassKeeper/*.apk
+V1/PassKeeper/output.json
 
 # IntelliJ
 *.iml
@@ -25,17 +40,18 @@ deploymentTargetDropDown.xml
 render.experimental.xml
 
 # Keystore files
-PassKeeper/*.jks
-PassKeeper/*.keystore
+V1/PassKeeper/*.jks
+V1/PassKeeper/*.keystore
 
 # Google Services (e.g. APIs or Firebase)
-PassKeeper/google-services.json
+V1/PassKeeper/google-services.json
+V2/PassKeeper/google-services.json
 
 # Android Profiling
-PassKeeper/*.hprof
+V1/PassKeeper/*.hprof
 
 ### Android Patch ###
-PassKeeper/gen-external-apklibs
+V1/PassKeeper/gen-external-apklibs
 
 # Replacement of .externalNativeBuild directories introduced
 # with Android Studio 3.5.
