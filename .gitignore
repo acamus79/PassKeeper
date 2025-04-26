@@ -1,23 +1,13 @@
 ### Android ###
 # Gradle files
-V1/PassKeeper/.gradle/*
-V1/PassKeeper/build/*
-V1/PassKeeper/app/build/*
+PassKeeper/.gradle/*
+PassKeeper/build/*
+PassKeeper/app/build/*
 V2/PassKeeper/.gradle/*
-
-# React-native files
 V2/PassKeeper/build/*
-V2/PassKeeper/.expo/*
+V2/PassKeeper/app/build/*
 V2/PassKeeper/android/*
-V2/PassKeeper/expo-env.d.*
-V2/PassKeeper/expo-*.json
-V2/PassKeeper/node_modules/*
-V2/PassKeeper/package-lock.json
-V2/PassKeeper/yarn-error.log
-V2/PassKeeper/yarn-debug.log
-V2/PassKeeper/yarn.lock
-V2/PassKeeper/ios/*
-
+V2/PassKeeper/expo/*
 
 # Local configuration file (sdk path, etc)
 V1/PassKeeper/local.properties
