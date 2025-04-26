@@ -8,7 +8,6 @@ import { useTheme } from '@contexts/ThemeContext';
 import useBiometrics from '@hooks/useBiometrics';
 import { UserService } from '@services/UserService';
 import { AuthService } from '@services/AuthService';
-import { ExportImportService } from '@services/ExportImportService';
 import { resetDatabase } from '@database/database';
 import * as SecureStore from 'expo-secure-store';
 import useThemeColor from '@hooks/useThemeColor';
@@ -36,11 +35,9 @@ export default function SettingsScreen() {
     const { isAvailable, authenticate } = useBiometrics();
 
     // Obtener colores del tema
-    const primaryColor = useThemeColor({}, 'primary');
     const errorColor = useThemeColor({}, 'error');
     const warningColor = useThemeColor({}, 'warning');
     const infoColor = useThemeColor({}, 'info');
-    const successColor = useThemeColor({}, 'success');
     const onSurfaceVariant = useThemeColor({}, 'onSurfaceVariant');
 
     const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, Alert, ActivityIndicator } from 'react-native'; // Added ActivityIndicator
 import { TextInput, Button, IconButton, Menu } from 'react-native-paper';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -66,7 +66,7 @@ export default function CreatePasswordScreen() {
                         console.warn("Default 'general' category not found.");
                     }
                 }
-                // In EDIT mode, the category will be set by the loadPasswordData effect
+                // En modo EDITAR, la categoría será establecida por el efecto loadPasswordData
             } catch (error) {
                 console.error('Error loading categories:', error);
                 Alert.alert(t('common.error'), t('categories.loadError'));
@@ -99,7 +99,7 @@ export default function CreatePasswordScreen() {
                 }
                 const passwordData = await PasswordService.getDecryptedPassword(passwordId, userSalt);
 
-                // 2. Populate form state (title, username, password, etc.)
+                // Rellenar el estado del formulario (título, nombre de usuario, contraseña, etc.)
                 setTitle(passwordData.title);
                 setUsername(passwordData.username || '');
                 setPassword(passwordData.decryptedPassword);
@@ -107,14 +107,11 @@ export default function CreatePasswordScreen() {
                 setWebsite(passwordData.website || '');
                 setNotes(passwordData.notes || '');
 
-                // Find and set the category using the nested category object
+                // Buscar y establecer la categoría usando el objeto categoría anidado
                 if (passwordData.category) { // Check if category object exists
-                    console.log('(Edit Mode) Attempting to find category for ID:', passwordData.category.id); // Use passwordData.category.id
-                    console.log('(Edit Mode) Available categories:', categories.map(c => ({ id: c.id, name: c.name, key: c.key })));
                     // Encuentra la categoría en la lista cargada usando el ID del objeto anidado
                     const category = categories.find(cat => cat.id === passwordData.category?.id); // Use optional chaining for safe access
                     if (category) {
-                        console.log('(Edit Mode) Category found and set:', category);
                         setSelectedCategory(category); // Establecer la categoría específica para la contraseña
                     } else {
                         // Este caso puede ocurrir si las categorías no se han cargado todavía, o si la categoría ha sido eliminada.
@@ -170,28 +167,26 @@ export default function CreatePasswordScreen() {
         try {
             setIsLoading(true);
 
-            // Get user salt (needed for both create and update)
+            // Obtener sal de usuario (necesaria tanto para crear como para actualizar)
             const saltKey = `${USER_SALT_KEY_PREFIX}${userId}`;
             const userSalt = await SecurityUtils.secureRetrieve(saltKey);
             if (!userSalt) {
                 throw new Error(t('errors.saltRetrievalFailed'));
             }
 
-            // Build the core password data object using the validated categoryId
+            // Construir el objeto de datos de la contraseña principal utilizando el categoryId validado
             const passwordData = {
                 title,
                 username,
                 website,
                 notes,
-                category_id: categoryId, // Use the guaranteed number type
-                favorite: 0, // Assuming favorite is not editable here
+                category_id: categoryId,
+                favorite: 0,
                 user_id: userId,
             };
 
             if (isEditMode && passwordId) {
                 const passwordChanged = password !== originalPassword;
-
-                console.log("Attempting to update password..."); // Log 1
                 await PasswordService.updatePassword(
                     passwordId,
                     passwordData,
@@ -229,11 +224,10 @@ export default function CreatePasswordScreen() {
             Alert.alert(t('common.error'), isEditMode ? t('passwords.updatingError') : t('passwords.savingError'));
         } finally {
             setIsLoading(false);
-            console.log("handleSave finally block executed."); // Log 6
         }
     };
 
-    // Show loading indicator while fetching data
+    // Mostrar indicador de carga mientras se obtienen datos
     if (isLoadingData) {
         return (
             <ThemedView style={styles.loadingContainer}>
@@ -266,7 +260,7 @@ export default function CreatePasswordScreen() {
                                     selectedCategory
                                         ? (selectedCategory.key
                                             ? t(`categories.${selectedCategory.key}`)
-                                            : selectedCategory.name) ?? '' // Ensure value is string
+                                            : selectedCategory.name) ?? '' // Me aseguro que sea un string
                                         : ''
                                 }
                                 style={styles.input}
@@ -373,7 +367,7 @@ export default function CreatePasswordScreen() {
                         mode="outlined"
                         onPress={() => router.back()}
                         style={styles.button}
-                        disabled={isLoading} // Disable cancel while saving/updating
+                        disabled={isLoading}
                     >
                         {t('common.cancel')}
                     </Button>
@@ -383,7 +377,7 @@ export default function CreatePasswordScreen() {
                         style={styles.button}
                         buttonColor={tintColor}
                         loading={isLoading}
-                        disabled={isLoading || isLoadingData} // Disable while loading data or saving
+                        disabled={isLoading || isLoadingData}
                     >
                         {isEditMode ? t('common.update') : t('common.save')}
                     </Button>
@@ -444,7 +438,7 @@ const styles = StyleSheet.create({
         flex: 1,
         marginHorizontal: 5,
     },
-    loadingContainer: { // Style for the loading indicator view
+    loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
