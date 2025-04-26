@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert, View } from 'react-native';
+import { StyleSheet, ScrollView, Alert, View, Linking } from 'react-native';
 import { List, Switch, Divider, Portal, Modal, Surface, TextInput, Button, Text } from 'react-native-paper';
 import { ThemedView } from '@components/ui/ThemedView';
 import useTranslation from '@hooks/useTranslation';
@@ -432,6 +432,35 @@ export default function SettingsScreen() {
                         descriptionStyle={{ color: onSurfaceVariant }}
                         left={props => <List.Icon {...props} icon="file-document-outline" color={infoColor} />}
                         onPress={() => setTermsModalVisible(true)}
+                        right={props => <List.Icon {...props} icon="chevron-right" />}
+                    />
+                    <List.Item
+                        title={t('settings.contactUs')}
+                        titleStyle={{ color: onSurfaceVariant, fontWeight: 'bold' }}
+                        description={t('settings.contactUsDescription')}
+                        descriptionStyle={{ color: onSurfaceVariant }}
+                        left={props => <List.Icon {...props} icon="email-outline" color={infoColor} />}
+                        onPress={() => {
+                            const email = 'SimpleInnova@proton.me';
+                            const subject = t('settings.emailSubject');
+                            const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+
+                            Linking.canOpenURL(mailtoUrl)
+                                .then(supported => {
+                                    if (supported) {
+                                        return Linking.openURL(mailtoUrl);
+                                    } else {
+                                        Alert.alert(
+                                            t('common.error'),
+                                            t('settings.emailAppNotFound')
+                                        );
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error al abrir la aplicación de correo:', error);
+                                    Alert.alert(t('common.error'), t('common.unexpectedError'));
+                                });
+                        }}
                         right={props => <List.Icon {...props} icon="chevron-right" />}
                     />
                 </List.Section>
