@@ -88,8 +88,6 @@ export default function Index() {
     }
   };
 
-
-
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -150,7 +148,7 @@ export default function Index() {
 
   return (
     <ThemedView style={styles.container}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={colorScheme === 'light' ? 'dark' : 'light'} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

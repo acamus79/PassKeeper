@@ -12,7 +12,7 @@ import { ThemeProvider } from '../src/contexts/ThemeContext';
 
 // Componente para manejar la protección de rutas a nivel global
 function ProtectedLayout({ colorScheme }: { colorScheme: 'light' | 'dark' }) {
-  console.log('PUNTO DE INGRESO GENERAL:');
+  console.log('PUNTO DE INGRESO GENERAL INICIO');
   const segments = useSegments();
   const router = useRouter();
   const { isAuthenticated, loading } = useAuth();
@@ -23,6 +23,7 @@ function ProtectedLayout({ colorScheme }: { colorScheme: 'light' | 'dark' }) {
   // Agregar logs para depuración
   useEffect(() => {
     console.log('PUNTO DE INGRESO GENERAL: Estado de autenticacion:', { isAuthenticated, loading, segments });
+    console.log('PUNTO DE INGRESO GENERAL: Segmentos:', segments);
   }, [isAuthenticated, loading, segments]);
 
   useEffect(() => {
