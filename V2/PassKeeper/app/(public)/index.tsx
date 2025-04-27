@@ -12,6 +12,7 @@ import useTranslation from '@hooks/useTranslation';
 import { useAuth } from '@contexts/AuthContext';
 
 export default function Index() {
+  console.log('INDEX.TS: Login');
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const onSurfaceVariant = useThemeColor({}, 'onSurfaceVariant');

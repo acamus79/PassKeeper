@@ -5,6 +5,7 @@ import useColorScheme from '@hooks/useColorScheme';
 import Colors from '@constants/Colors';
 
 export default function AuthLayout() {
+  console.log('PUNTO DE INGRESO PUBLICO');
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
 

@@ -18,6 +18,7 @@ export const db = openDatabaseSync('passkeeper.db');
 
 // Initialize database tables
 export const initDatabase = async () => {
+    console.log('DATABASE.TS: iniciando la base de datos...');
     try {
         // Create users table if it doesn't exist
         await db.execAsync(`

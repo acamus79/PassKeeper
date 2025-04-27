@@ -4,7 +4,7 @@
     "slug": "PassKeeper",
     "version": "2.7.3",
     "orientation": "portrait",
-    "icon": "./assets/images/passkeeper.png",
+    "icon": "./assets/images/icon2.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,15 +13,15 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptiveIcon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.acamus79.PassKeeper"
+      "package": "com.rocketteam.passkeeper"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/passkeeper.png"
+      "favicon": "./assets/images/icon2.png"
     },
     "plugins": [
       "expo-router",

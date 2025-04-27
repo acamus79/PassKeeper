@@ -8,11 +8,11 @@ import Colors from '@constants/Colors'; // Asegúrate que la importación sea de
 import { initDatabase } from '@database/database';
 import { AuthProvider, useAuth } from '@contexts/AuthContext';
 import useActivityTracker from '@hooks/useActivityTracker';
-import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider } from '../src/contexts/ThemeContext';
 
 // Componente para manejar la protección de rutas a nivel global
 function ProtectedLayout({ colorScheme }: { colorScheme: 'light' | 'dark' }) {
+  console.log('PUNTO DE INGRESO GENERAL:');
   const segments = useSegments();
   const router = useRouter();
   const { isAuthenticated, loading } = useAuth();
@@ -22,7 +22,7 @@ function ProtectedLayout({ colorScheme }: { colorScheme: 'light' | 'dark' }) {
 
   // Agregar logs para depuración
   useEffect(() => {
-    console.log('Auth state:', { isAuthenticated, loading, segments });
+    console.log('PUNTO DE INGRESO GENERAL: Estado de autenticacion:', { isAuthenticated, loading, segments });
   }, [isAuthenticated, loading, segments]);
 
   useEffect(() => {
@@ -30,10 +30,13 @@ function ProtectedLayout({ colorScheme }: { colorScheme: 'light' | 'dark' }) {
       const inPublicGroup = segments[0] === '(public)';
       // Si no está autenticado y no está en el grupo público, redirigir al login
       if (!isAuthenticated && !inPublicGroup) {
+        console.log('Redirecting to login...');
         router.replace({
           pathname: '/(public)'
         });
       } else if (isAuthenticated && inPublicGroup) {
+        // Si está autenticado y está en el grupo público, redirigir al dashboard
+        console.log('Redirecting to dashboard...');
         router.replace({
           pathname: '/(protected)/passwords'
         });
@@ -67,12 +70,12 @@ export default function RootLayout() {
   useEffect(() => {
     const setupApp = async () => {
       try {
-        console.log('Initializing database...');
         // Inicializar la base de datos normalmente
         await initDatabase();
+        console.log('PUNTO DE INGRESO: setupApp base de datos inicializada');
         // Verificar datos de sesión en SecureStore
-        const userId = await SecureStore.getItemAsync('session_user_id');
-        const username = await SecureStore.getItemAsync('session_username');
+        //const userId = await SecureStore.getItemAsync('session_user_id');
+        //const username = await SecureStore.getItemAsync('session_username');
 
       } catch (error) {
         console.error('Error during app initialization:', error);

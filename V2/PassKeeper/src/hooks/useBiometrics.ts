@@ -19,7 +19,7 @@ export default function useBiometrics() {
         // Evitar verificaciones simultáneas y frecuentes
         const now = Date.now();
         if (globalIsChecking || (now - lastCheckTime < CHECK_INTERVAL)) {
-            console.log('Skipping redundant biometric check');
+            console.log('HOOK useBiometrics: Evitando múltiples verificaciones simultáneas o frecuentes');
             return;
         }
 
@@ -27,10 +27,10 @@ export default function useBiometrics() {
         setIsChecking(true);
 
         try {
-            console.log('Checking biometric availability with expo-local-authentication...');
+            console.log('HOOK useBiometrics: checkBiometricAvailability');
             // Verificar si el hardware es compatible
             const hasHardware = await LocalAuthentication.hasHardwareAsync();
-            console.log('Device has biometric hardware:', hasHardware);
+            console.log('HOOK useBiometrics: Dispositivo compatible con biometría:', hasHardware);
 
             if (!hasHardware) {
                 setIsAvailable(false);
@@ -40,19 +40,22 @@ export default function useBiometrics() {
 
             // Verificar si hay biometría registrada
             const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-            console.log('Device has enrolled biometrics:', isEnrolled);
+            console.log('HOOK useBiometrics: Dispositivo tiene biometria guardada:', isEnrolled);
 
             // Obtener tipos de autenticación disponibles
             const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
-            console.log('Supported authentication types:', supportedTypes);
+            console.log('HOOK useBiometrics: Tipo de autenticacion soportada:', supportedTypes);
 
             let biometricType = null;
             if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
                 biometricType = 'fingerprint';
+                console.log('HOOK useBiometrics: Dispositivo tiene huellas dactilares');
             } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
                 biometricType = 'facialRecognition';
+                console.log('HOOK useBiometrics: Dispositivo tiene reconocimiento facial');
             } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.IRIS)) {
                 biometricType = 'iris';
+                console.log('HOOK useBiometrics: Dispositivo tiene iris');
             }
 
             setIsAvailable(hasHardware && isEnrolled);
