@@ -151,7 +151,7 @@ export default function CreatePasswordScreen() {
 
         // Validar campos
         if (!title.trim() || !password.trim() || !selectedCategory || !userId) {
-            Alert.alert(t('common.error'), t('passwords.titleRequired'));
+            Alert.alert(t('common.error'), t('passwords.valueRequired'));
             return;
         }
 

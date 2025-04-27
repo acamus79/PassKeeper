@@ -112,10 +112,13 @@
         "authError": "Authentication error",
         "invalidCredentials": "Invalid credentials",
         "biometricAuthNotSupported": "Biometric authentication not supported",
-        "biometricAuthFailed": "Biometric authentication failed"
+        "biometricAuthFailed": "Biometric authentication failed",
+        "biometricNotConfigured": "Biometric authentication not configured",
+        "biometricError": "Biometric authentication error"
     },
     "passwords": {
         "title": "Secure Passwords",
+        "valueRequired": "The name and password are required",
         "name": "Title",
         "category": "Category",
         "createNew": "Create New Password",

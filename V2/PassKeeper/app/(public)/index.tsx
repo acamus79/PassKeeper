@@ -10,6 +10,8 @@ import useThemeColor from '@hooks/useThemeColor';
 import useBiometrics from '@hooks/useBiometrics';
 import useTranslation from '@hooks/useTranslation';
 import { useAuth } from '@contexts/AuthContext';
+import { UserRepository } from '@repositories/UserRepository';
+import { AuthService } from '@services/AuthService';
 
 export default function Index() {
   console.log('INDEX.TS: Login');
@@ -18,7 +20,7 @@ export default function Index() {
   const onSurfaceVariant = useThemeColor({}, 'onSurfaceVariant');
   const surfaceVariant = useThemeColor({}, 'surfaceVariant');
   const tintColor = useThemeColor({}, 'tint');
-  const { isAuthenticated, loading: isAuthLoading, login } = useAuth();
+  const { isAuthenticated, loading: isAuthLoading, login, refreshAuthState } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
@@ -69,22 +71,69 @@ export default function Index() {
   };
 
   const handleBiometricLogin = async () => {
+    // Verificar si la biometría está disponible
     if (!isAvailable) {
-      console.log('Biometrics not available for login');
+      console.log('Biometría no disponible para inicio de sesión');
+      Alert.alert(
+        t('common.error'),
+        t('login.biometricNotAvailable')
+      );
       return;
     }
 
-    console.log('Attempting biometric login');
-    const success = await authenticate(t('login.biometricPrompt'));
-    if (success) {
-      // Aquí deberíamos verificar si hay credenciales guardadas para biometría
-      // Por ahora, simplemente mostramos un mensaje
+    // Verificar si ya está en proceso de autenticación
+    if (isLoading || isChecking) {
+      console.log('Proceso de autenticación ya en curso');
+      return;
+    }
+
+    console.log('Intentando inicio de sesión biométrico');
+    setIsLoading(true);
+
+    try {
+      // Primero buscar usuarios con biometría habilitada para evitar autenticación innecesaria
+      const usersWithBiometrics = await UserRepository.findUsersWithBiometricEnabled();
+
+      if (!usersWithBiometrics || usersWithBiometrics.length === 0) {
+        // No hay usuarios con biometría habilitada
+        Alert.alert(
+          t('login.biometricError'),
+          t('login.biometricNotConfigured')
+        );
+        return;
+      }
+
+      // Ahora que sabemos que hay usuarios con biometría, intentar autenticar
+      const biometricSuccess = await authenticate(t('login.biometricPrompt'));
+
+      if (!biometricSuccess) {
+        console.log('Autenticación biométrica fallida o cancelada');
+        return;
+      }
+
+      // Procesar según la cantidad de usuarios con biometría habilitada
+      if (usersWithBiometrics.length === 1) {
+        // Si solo hay un usuario con biometría, iniciar sesión automáticamente
+        const user = usersWithBiometrics[0];
+        await AuthService.loginWithBiometrics(user.id);
+        await refreshAuthState();
+        console.log('Inicio de sesión biométrico exitoso para usuario:', user.username);
+      } else {
+        // Si hay múltiples usuarios con biometría, idealmente mostrar opciones
+        // TODO: Implementar selector de usuario para múltiples usuarios con biometría
+        const user = usersWithBiometrics[0];
+        await AuthService.loginWithBiometrics(user.id);
+        await refreshAuthState();
+        console.log('Inicio de sesión biométrico exitoso (múltiples usuarios disponibles)');
+      }
+    } catch (error) {
+      console.error('Error en inicio de sesión biométrico:', error);
       Alert.alert(
-        t('login.biometricSuccess'),
-        t('login.biometricNotConfigured')
+        t('common.error'),
+        t('login.biometricLoginFailed')
       );
-    } else {
-      console.log('Biometric authentication failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 

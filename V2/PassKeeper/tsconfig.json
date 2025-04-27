@@ -30,7 +30,10 @@
       ],
       "@app-types/*": [
         "src/types/*"
-      ]
+      ],
+      "@repositories/*": [
+        "src/repositories/*"
+      ],
     }
   },
   "include": [

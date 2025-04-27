@@ -4,6 +4,22 @@ import { executeInTransaction, executeWithRetry } from '../utils/DatabaseUtils';
 
 // Añadir métodos para gestionar la configuración de auto-lock
 export const UserRepository = {
+    /**
+     * Busca usuarios que tienen la autenticación biométrica habilitada
+     */
+    findUsersWithBiometricEnabled: async (): Promise<User[]> => {
+        try {
+            return await executeWithRetry(async () => {
+                return await db.getAllAsync<User>(
+                    'SELECT * FROM users WHERE biometric = 1'
+                );
+            });
+        } catch (error) {
+            console.error('Error finding users with biometric enabled:', error);
+            throw error;
+        }
+    },
+
     create: async (user: Omit<User, 'id'>): Promise<number> => {
         try {
             // Usar transacción para garantizar la integridad de la operación

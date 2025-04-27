@@ -16,6 +16,37 @@ const DEFAULT_INACTIVITY_TIMEOUT = 3 * 60 * 1000; // 3 minutos en milisegundos
 
 export const AuthService = {
     /**
+     * Inicia sesión utilizando biometría (sin contraseña)
+     * Se utiliza después de una autenticación biométrica exitosa
+     */
+    loginWithBiometrics: async (userId: number): Promise<boolean> => {
+        try {
+            // Buscar usuario por ID
+            const user: User | null = await UserRepository.findById(userId);
+            if (!user) {
+                return false;
+            }
+
+            // Verificar que el usuario tenga biometría habilitada
+            if (user.biometric !== 1) {
+                console.error('User does not have biometrics enabled');
+                return false;
+            }
+
+            // Guardar datos de sesión y actualizar última actividad
+            await Promise.all([
+                saveSession(user),
+                AuthService.updateLastActivity()
+            ]);
+
+            return true;
+        } catch (error) {
+            console.error('Biometric login error:', error);
+            return false;
+        }
+    },
+
+    /**
      * Verifica la contraseña del usuario sin iniciar sesión
      */
     verifyPassword: async (username: string, password: string): Promise<boolean> => {
