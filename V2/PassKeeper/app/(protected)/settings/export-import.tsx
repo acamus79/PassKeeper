@@ -210,7 +210,7 @@ export default function ExportImportScreen() {
     const pickImportFile = async () => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
-                type: ['application/json'],
+                type: ['application/*'],
                 copyToCacheDirectory: true
             });
 
@@ -218,8 +218,17 @@ export default function ExportImportScreen() {
                 return;
             }
 
-            setImportFile(result.assets[0].uri);
-            completeImport();
+            // Guardar la ruta del archivo y luego intentar la importación
+            const fileUri = result.assets[0].uri;
+            setImportFile(fileUri);
+
+            // Verificar que tenemos todos los datos necesarios antes de continuar
+            if (userId && externalSalt && fileUri) {
+                // Esperar un momento para asegurar que el estado se ha actualizado
+                setTimeout(() => {
+                    completeImport(fileUri);
+                }, 100);
+            }
 
         } catch (error) {
             console.error('Error al seleccionar archivo:', error);
@@ -239,8 +248,16 @@ export default function ExportImportScreen() {
     };
 
     // Función para completar la importación
-    const completeImport = async () => {
-        if (!userId || !externalSalt || !importFile) {
+    const completeImport = async (fileUriParam?: string) => {
+        // Usar el parámetro si se proporciona, de lo contrario usar el estado
+        const fileUri = fileUriParam || importFile;
+
+        if (!userId || !externalSalt || !fileUri) {
+            console.error('Datos incompletos para la importación');
+            console.log('externalSalt:', externalSalt);
+            console.log('fileUri:', fileUri);
+            console.log('importFile estado:', importFile);
+            console.log('userId:', userId);
             Alert.alert(t('common.error'), t('settings.importDataMissing'));
             return;
         }
@@ -249,7 +266,7 @@ export default function ExportImportScreen() {
             setLoading(true);
 
             // Importar datos con el salt externo y el archivo seleccionado
-            const success = await ExportImportService.importDataWithExternalSalt(userId, externalSalt, importFile);
+            const success = await ExportImportService.importDataWithExternalSalt(userId, externalSalt, fileUri);
 
             if (success) {
                 Alert.alert(

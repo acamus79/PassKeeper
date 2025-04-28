@@ -111,7 +111,7 @@ export default function SettingsScreen() {
 
             if (value) {
                 // Si está activando, primero autenticar
-                const success = await authenticate(t('biometric.confirmEnable'));
+                const success = await authenticate(t('settings.biometric.confirmAction'));
                 if (!success) {
                     console.log('Autenticación biométrica fallida o cancelada');
                     return;

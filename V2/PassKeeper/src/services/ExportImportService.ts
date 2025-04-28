@@ -1,13 +1,14 @@
 import { Category, Password } from '../types/entities';
 import { CategoryService } from './CategoryService';
 import { PasswordService } from './PasswordService';
-import * as SecureStore from 'expo-secure-store';
 import { SecurityUtils } from '../utils/SecurityUtils';
 import { executeInTransaction } from '../utils/DatabaseUtils';
 import { USER_SALT_KEY_PREFIX } from '../constants/secureStorage';
+import * as SecureStore from 'expo-secure-store';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
+import { db } from '../database/database';
 
 /**
  * Tipo para los datos de exportación
@@ -27,6 +28,23 @@ type ImportResult = {
     importedPasswords: number;
     errors: string[];
 };
+
+/**
+ * Tipo para los elementos a importar en el array passwordsToImport
+ */
+interface PasswordToImport {
+    passwordData: {
+        title: string;
+        username?: string;
+        website?: string;
+        notes?: string;
+        favorite: number;
+        user_id: number;
+        category?: Category;
+    };
+    plainPassword: string;
+    title: string;
+}
 
 /**
  * Servicio para exportar e importar datos de usuario
@@ -124,33 +142,56 @@ export const ExportImportService = {
         importSalt: string,
         userSalt: string
     ): Promise<ImportResult> {
-        // Ejecutar toda la importación en una transacción para garantizar la integridad
-        return executeInTransaction(async () => {
-            const result: ImportResult = {
-                success: false,
-                importedCategories: 0,
-                importedPasswords: 0,
-                errors: []
+        const result: ImportResult = {
+            success: false,
+            importedCategories: 0,
+            importedPasswords: 0,
+            errors: []
+        };
+
+        try {
+            // Parsear el payload y descifrar los datos
+            const payload = JSON.parse(encryptedPayload);
+            const decryptedData = await SecurityUtils.decrypt(payload.encrypted, importSalt, payload.iv);
+            const importData: ExportData = JSON.parse(decryptedData);
+
+            console.log('Datos importados:', importData);
+
+            // Validar la estructura de los datos importados
+            if (!importData.categories || !importData.passwords ||
+                !Array.isArray(importData.categories) ||
+                !Array.isArray(importData.passwords) ||
+                typeof userId !== 'number') {
+                throw new Error('Datos de importación inválidos o userId incorrecto');
+            }
+
+            // Función auxiliar para crear categoría sin transacción anidada
+            const createCategoryWithoutTransaction = async (categoryData: Omit<Category, 'id'>): Promise<number> => {
+                try {
+                    // Usar directamente el repositorio sin transacción adicional
+                    // ya que estamos dentro de una transacción en executeInTransaction
+                    const result = await db.runAsync(
+                        `INSERT INTO categories (name, icon, color, user_id) 
+                        VALUES (?, ?, ?, ?)`,
+                        categoryData.name,
+                        categoryData.icon || null,
+                        categoryData.color || null,
+                        categoryData.user_id
+                    );
+                    return result.lastInsertRowId;
+                } catch (error) {
+                    console.error('Error al crear categoría sin transacción:', error);
+                    throw new Error('Error al crear la categoría');
+                }
             };
 
-            try {
-                // Parsear el payload y descifrar los datos
-                const payload = JSON.parse(encryptedPayload);
-                const decryptedData = await SecurityUtils.decrypt(payload.encrypted, importSalt, payload.iv);
-                const importData: ExportData = JSON.parse(decryptedData);
-
-                // Validar la estructura de los datos importados
-                if (!importData.categories || !importData.passwords ||
-                    !Array.isArray(importData.categories) ||
-                    !Array.isArray(importData.passwords) ||
-                    typeof userId !== 'number') {
-                    throw new Error('Datos de importación inválidos o userId incorrecto');
-                }
-
-                // Importar categorías primero
+            // Importar categorías primero (sin transacción, ya que executeInTransaction la manejará)
+            console.log('Iniciando importación de categorías...');
+            await executeInTransaction(async () => {
                 for (const category of importData.categories) {
                     try {
-                        await CategoryService.createCategory({
+                        // Usar el método sin transacción anidada
+                        await createCategoryWithoutTransaction({
                             ...category,
                             user_id: userId // Asignar al usuario actual
                         });
@@ -159,67 +200,126 @@ export const ExportImportService = {
                         result.errors.push(`Error en categoría ${category.name}: ${e.message || 'Error desconocido'}`);
                     }
                 }
+                console.log(`Importación de categorías completada: ${result.importedCategories} categorías importadas`);
+            });
 
-                // Obtener las categorías recién creadas para mapear los IDs
-                const userCategories = await CategoryService.getUserCategories(userId);
+            // Obtener las categorías recién creadas para mapear los IDs
+            const userCategories = await CategoryService.getUserCategories(userId);
 
-                // Importar contraseñas
-                for (const password of importData.passwords) {
-                    try {
-                        // Descifrar la contraseña con el salt de importación
-                        const plainPassword = await SecurityUtils.decrypt(
-                            password.password,
-                            importSalt,
-                            password.iv
+            // Preparar las contraseñas para importar (descifrar fuera de la transacción)
+            const passwordsToImport: PasswordToImport[] = [];
+            for (const password of importData.passwords) {
+                try {
+                    // Descifrar la contraseña con el salt de importación
+                    const plainPassword = await SecurityUtils.decrypt(
+                        password.password,
+                        importSalt,
+                        password.iv
+                    );
+
+                    if (typeof plainPassword !== 'string' || plainPassword.length === 0) {
+                        throw new Error('Contraseña descifrada inválida');
+                    }
+
+                    // Encontrar la categoría correspondiente por nombre si existe
+                    let categoryId = null;
+                    if (password.category && password.category.name) {
+                        const categoryName = password.category.name; // Extraer el nombre
+                        const matchingCategory = userCategories.find(
+                            c => c.name === categoryName && c.user_id === userId
                         );
-
-                        if (typeof plainPassword !== 'string' || plainPassword.length === 0) {
-                            throw new Error('Contraseña descifrada inválida');
+                        if (matchingCategory) {
+                            categoryId = matchingCategory.id;
                         }
+                    }
 
-                        // Encontrar la categoría correspondiente por nombre si existe
-                        let categoryId = null;
-                        if (password.category && password.category.name) {
-                            const categoryName = password.category.name; // Extraer el nombre
-                            const matchingCategory = userCategories.find(
-                                c => c.name === categoryName && c.user_id === userId
-                            );
-                            if (matchingCategory) {
-                                categoryId = matchingCategory.id;
-                            }
-                        }
+                    // Guardar para importar en la transacción
+                    passwordsToImport.push({
+                        passwordData: {
+                            title: password.title,
+                            username: password.username || undefined,
+                            website: password.website || undefined,
+                            notes: password.notes || undefined,
+                            favorite: password.favorite ?? 0,
+                            user_id: userId,
+                            category: categoryId ? { id: categoryId } as Category : undefined
+                        },
+                        plainPassword,
+                        title: password.title
+                    });
+                } catch (e: any) {
+                    result.errors.push(`Error al preparar contraseña ${password.title}: ${e.message || 'Error desconocido'}`);
+                }
+            }
 
-                        // Crear la contraseña con el salt del usuario actual
-                        await PasswordService.createPassword(
-                            {
-                                title: password.title,
-                                username: password.username,
-                                website: password.website,
-                                notes: password.notes,
-                                favorite: password.favorite,
-                                user_id: userId,
-                                category: categoryId ? { id: categoryId } as Category : undefined
-                            },
-                            plainPassword,
+            // Función auxiliar para crear contraseña sin transacción anidada
+            const createPasswordWithoutTransaction = async (passwordData: any, plainPassword: string, salt: string) => {
+                try {
+                    // Cifrar la contraseña directamente
+                    const { encryptedData, iv } = await SecurityUtils.encrypt(plainPassword, salt);
+
+                    // Preparar datos para el repositorio
+                    const passwordToCreate = {
+                        ...passwordData,
+                        password: encryptedData,
+                        iv,
+                        category_id: passwordData.category?.id
+                    };
+
+                    // Usar directamente el repositorio sin transacción adicional
+                    // ya que estamos dentro de una transacción en executeInTransaction
+                    const result = await db.runAsync(
+                        `INSERT INTO passwords (
+                        title, username, password, website, notes, 
+                        category_id, favorite, iv, user_id
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        passwordToCreate.title,
+                        passwordToCreate.username || null,
+                        passwordToCreate.password,
+                        passwordToCreate.website || null,
+                        passwordToCreate.notes || null,
+                        passwordToCreate.category_id || null,
+                        passwordToCreate.favorite || 0,
+                        passwordToCreate.iv,
+                        passwordToCreate.user_id
+                    );
+                    return result.lastInsertRowId;
+                } catch (error) {
+                    console.error('Error al crear contraseña sin transacción:', error);
+                    throw new Error('Error al crear la contraseña cifrada');
+                }
+            };
+
+            // Importar contraseñas en una sola transacción
+            console.log('Iniciando importación de contraseñas...');
+            await executeInTransaction(async () => {
+                for (const item of passwordsToImport) {
+                    try {
+                        // Crear la contraseña con el método sin transacción anidada
+                        await createPasswordWithoutTransaction(
+                            item.passwordData,
+                            item.plainPassword,
                             userSalt // Cifrar con el salt del usuario actual
                         );
                         result.importedPasswords++;
                     } catch (e: any) {
-                        result.errors.push(`Error en contraseña ${password.title}: ${e.message || 'Error desconocido'}`);
+                        result.errors.push(`Error en contraseña ${item.title}: ${e.message || 'Error desconocido'}`);
                     }
                 }
+                console.log(`Importación de contraseñas completada: ${result.importedPasswords} contraseñas importadas`);
+            });
 
-                // La importación es exitosa si no hay errores
-                result.success = result.errors.length === 0;
-                return result;
+            // La importación es exitosa si no hay errores
+            result.success = result.errors.length === 0;
+            return result;
 
-            } catch (error: any) {
-                console.error('Error durante la importación:', error);
-                result.errors.push(error.message || 'Error desconocido durante la importación');
-                return result;
-            }
-        });
+        } catch (error: any) {
+            console.error('Error durante la importación:', error);
+            result.errors.push(error.message || 'Error desconocido durante la importación');
+            return result;
+        }
     },
+
 
     /**
      * Exporta los datos del usuario y guarda el archivo en el dispositivo
