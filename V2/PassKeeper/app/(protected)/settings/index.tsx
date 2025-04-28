@@ -483,7 +483,7 @@ export default function SettingsScreen() {
                     />
                 </List.Section>
 
-                {/* Sección de desarrollo para pruebas - siempre visible durante desarrollo */}
+                {/* Sección de desarrollo para pruebas - siempre visible durante desarrollo 
                 <Divider style={styles.divider} />
                 <List.Section>
                     <List.Subheader>Desarrollo</List.Subheader>
@@ -557,7 +557,9 @@ export default function SettingsScreen() {
                         }}
                     />
                 </List.Section>
+                 */}
             </ScrollView>
+
 
             {/* Modal de Términos y Condiciones */}
             <ScrollModal
