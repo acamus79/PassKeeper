@@ -115,16 +115,34 @@ export default function Index() {
       if (usersWithBiometrics.length === 1) {
         // Si solo hay un usuario con biometría, iniciar sesión automáticamente
         const user = usersWithBiometrics[0];
-        await AuthService.loginWithBiometrics(user.id);
-        await refreshAuthState();
-        console.log('Inicio de sesión biométrico exitoso para usuario:', user.username);
+        // Verificar que user.id sea un valor válido antes de usarlo
+        if (user.id !== undefined) {
+          await AuthService.loginWithBiometrics(user.id);
+          await refreshAuthState();
+          console.log('Inicio de sesión biométrico exitoso para usuario:', user.username);
+        } else {
+          console.error('Error: ID de usuario indefinido');
+          Alert.alert(
+            t('common.error'),
+            t('login.biometricLoginFailed')
+          );
+        }
       } else {
         // Si hay múltiples usuarios con biometría, idealmente mostrar opciones
         // TODO: Implementar selector de usuario para múltiples usuarios con biometría
         const user = usersWithBiometrics[0];
-        await AuthService.loginWithBiometrics(user.id);
-        await refreshAuthState();
-        console.log('Inicio de sesión biométrico exitoso (múltiples usuarios disponibles)');
+        // Verificar que user.id sea un valor válido antes de usarlo
+        if (user.id !== undefined) {
+          await AuthService.loginWithBiometrics(user.id);
+          await refreshAuthState();
+          console.log('Inicio de sesión biométrico exitoso (múltiples usuarios disponibles)');
+        } else {
+          console.error('Error: ID de usuario indefinido');
+          Alert.alert(
+            t('common.error'),
+            t('login.biometricLoginFailed')
+          );
+        }
       }
     } catch (error) {
       console.error('Error en inicio de sesión biométrico:', error);
