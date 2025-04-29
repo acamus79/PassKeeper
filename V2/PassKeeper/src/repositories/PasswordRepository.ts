@@ -46,7 +46,7 @@ export const PasswordRepository = {
                     FROM passwords p
                     LEFT JOIN categories c ON p.category_id = c.id
                     WHERE p.user_id = ?
-                    ORDER BY p.title`,
+                    ORDER BY p.updated_at DESC, p.title`,
                     userId
                 );
             });
@@ -94,14 +94,14 @@ export const PasswordRepository = {
                 return await db.getFirstAsync<any>(
                     `SELECT 
                         p.*,
-                        c.id as cat_id,
-                        c.name as cat_name,
-                        c.icon as cat_icon,
-                        c.color as cat_color,
-                        c.user_id as cat_user_id
+                    c.id as cat_id,
+                    c.name as cat_name,
+                    c.icon as cat_icon,
+                    c.color as cat_color,
+                    c.user_id as cat_user_id
                     FROM passwords p
                     LEFT JOIN categories c ON p.category_id = c.id
-                    WHERE p.id = ?`,
+                    WHERE p.id = ? `,
                     id
                 );
             });
@@ -147,15 +147,15 @@ export const PasswordRepository = {
                 return await db.getAllAsync<any>(
                     `SELECT 
                         p.*,
-                        c.id as cat_id,
-                        c.name as cat_name,
-                        c.icon as cat_icon,
-                        c.color as cat_color,
-                        c.user_id as cat_user_id
+                    c.id as cat_id,
+                    c.name as cat_name,
+                    c.icon as cat_icon,
+                    c.color as cat_color,
+                    c.user_id as cat_user_id
                     FROM passwords p
                     LEFT JOIN categories c ON p.category_id = c.id
                     WHERE p.category_id = ?
-                    ORDER BY p.title`,
+                    ORDER BY p.updated_at DESC, p.title`,
                     categoryId
                 );
             });
@@ -197,27 +197,27 @@ export const PasswordRepository = {
 
     search: async (userId: number, query: string): Promise<Password[]> => {
         try {
-            const searchQuery = `%${query}%`;
+            const searchQuery = `% ${query} % `;
             // Usar executeWithRetry para manejar posibles bloqueos de base de datos
             const results = await executeWithRetry(async () => {
                 return await db.getAllAsync<any>(
                     `SELECT 
                         p.*,
-                        c.id as cat_id,
-                        c.name as cat_name,
-                        c.icon as cat_icon,
-                        c.color as cat_color,
-                        c.user_id as cat_user_id
+                    c.id as cat_id,
+                    c.name as cat_name,
+                    c.icon as cat_icon,
+                    c.color as cat_color,
+                    c.user_id as cat_user_id
                     FROM passwords p
                     LEFT JOIN categories c ON p.category_id = c.id
-                    WHERE p.user_id = ? AND (
+                    WHERE p.user_id = ? AND(
                         p.title LIKE ? OR 
                         p.username LIKE ? OR 
                         p.website LIKE ? OR 
                         p.notes LIKE ? OR
                         c.name LIKE ?
                     )
-                    ORDER BY p.title`,
+                    ORDER BY p.updated_at DESC, p.title`,
                     userId, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery
                 );
             });
@@ -284,7 +284,7 @@ export const PasswordRepository = {
                 setClauses.push("updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')");
 
                 // Construct the final SQL query
-                const sql = `UPDATE passwords SET ${setClauses.join(', ')} WHERE id = ?`;
+                const sql = `UPDATE passwords SET ${setClauses.join(', ')} WHERE id = ? `;
                 values.push(id); // Add the id for the WHERE clause
 
                 // Execute the query
@@ -293,8 +293,8 @@ export const PasswordRepository = {
                 await db.runAsync(sql, ...values);
             });
         } catch (error) {
-            console.error(`Error updating password with id ${id}:`, error);
-            throw new Error(`Failed to update password with id ${id}`);
+            console.error(`Error updating password with id ${id}: `, error);
+            throw new Error(`Failed to update password with id ${id} `);
         }
     },
 
@@ -309,7 +309,7 @@ export const PasswordRepository = {
             });
         } catch (error) {
             console.error('Error deleting password:', error);
-            throw new Error(`Failed to delete password with id ${id}`);
+            throw new Error(`Failed to delete password with id ${id} `);
         }
     }
 };

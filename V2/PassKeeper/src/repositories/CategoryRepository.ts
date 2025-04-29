@@ -29,7 +29,7 @@ export const CategoryRepository = {
             // Usar executeWithRetry para manejar posibles bloqueos de base de datos
             return await executeWithRetry(async () => {
                 return await db.getAllAsync<Category>(
-                    'SELECT * FROM categories WHERE user_id = ? OR user_id = 0 ORDER BY id',
+                    'SELECT * FROM categories WHERE user_id = ? OR user_id = 0 ORDER BY updated_at DESC, name',
                     userId
                 );
             });
@@ -45,7 +45,7 @@ export const CategoryRepository = {
             // Usar executeWithRetry para manejar posibles bloqueos de base de datos
             return await executeWithRetry(async () => {
                 return await db.getAllAsync<Category>(
-                    'SELECT * FROM categories ORDER BY name'
+                    'SELECT * FROM categories ORDER BY updated_at DESC, name'
                 );
             });
         } catch (error) {

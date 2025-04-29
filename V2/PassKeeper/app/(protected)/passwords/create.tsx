@@ -61,7 +61,6 @@ export default function CreatePasswordScreen() {
                     const generalCategory = userCategories.find(cat => cat.key === 'general');
                     if (generalCategory) {
                         setSelectedCategory(generalCategory);
-                        console.log('Default category set to General:', generalCategory); // Debug log
                     } else {
                         console.warn("Default 'general' category not found.");
                     }

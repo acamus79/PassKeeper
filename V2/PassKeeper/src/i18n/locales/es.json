@@ -20,6 +20,7 @@
         "initError": "Error al inicializar la aplicación. Por favor, reinicie."
     },
     "settings": {
+        "title": "Ajustes",
         "exportImport": "Exportar/Importar datos",
         "exportImportDescription": "Exporta o importa tus contraseñas y categorías",
         "exportImportTitle": "Exportar e Importar Datos",

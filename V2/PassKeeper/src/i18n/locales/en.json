@@ -20,6 +20,7 @@
         "initError": "Failed to initialize the app. Please restart."
     },
     "settings": {
+        "title": "Settings",
         "exportImport": "Export/Import Data",
         "exportImportDescription": "Export or import your passwords and categories",
         "exportImportTitle": "Export and Import Data",

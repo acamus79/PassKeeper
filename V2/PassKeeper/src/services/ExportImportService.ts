@@ -225,9 +225,19 @@ export const ExportImportService = {
                     let categoryId = null;
                     if (password.category && password.category.name) {
                         const categoryName = password.category.name; // Extraer el nombre
-                        const matchingCategory = userCategories.find(
+
+                        // Buscar primero en las categorías del usuario
+                        let matchingCategory = userCategories.find(
                             c => c.name === categoryName && c.user_id === userId
                         );
+
+                        // Si no se encuentra, buscar en las categorías del sistema (userId=0)
+                        if (!matchingCategory) {
+                            matchingCategory = userCategories.find(
+                                c => c.name === categoryName && c.user_id === 0
+                            );
+                        }
+
                         if (matchingCategory) {
                             categoryId = matchingCategory.id;
                         }
